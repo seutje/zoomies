@@ -20,16 +20,16 @@ const leaderboardListEl = document.getElementById('leaderboardList');
 const track = {
     width: 60,
     checkpoints: [
-        { x: 100, y: 300, passed: false },
+        { x: 150, y: 300, passed: false },
         { x: 200, y: 200, passed: false },
         { x: 400, y: 150, passed: false },
         { x: 600, y: 200, passed: false },
-        { x: 700, y: 300, passed: false },
+        { x: 650, y: 300, passed: false },
         { x: 600, y: 400, passed: false },
         { x: 400, y: 450, passed: false },
         { x: 200, y: 400, passed: false }
     ],
-    startX: 100,
+    startX: 150,
     startY: 300,
     startAngle: 0
 };
