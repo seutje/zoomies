@@ -649,7 +649,7 @@ function nextGeneration() {
     
     updateUI();
     isRunning = true;
-    nextGenBtn.disabled = true;
+    nextGenBtn.disabled = false;
     updateSimulation();
 }
 
@@ -668,11 +668,16 @@ startBtn.addEventListener('click', () => {
     initSimulation();
     isRunning = true;
     startBtn.disabled = true;
+    nextGenBtn.disabled = false;
     cancelAnimationFrame(animationId);
     updateSimulation();
 });
 
 nextGenBtn.addEventListener('click', () => {
+    if (isRunning) {
+        isRunning = false;
+        cancelAnimationFrame(animationId);
+    }
     nextGeneration();
 });
 
