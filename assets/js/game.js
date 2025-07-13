@@ -224,13 +224,13 @@ class Car {
         this.sensors = [];
     }
     
-    update(track) {
+    update() {
         if (this.crashed || this.completed) return;
         
         this.time += 0.1;
         
         // Get sensor readings
-        this.sensors = this.getSensorReadings(track);
+        this.sensors = this.getSensorReadings();
         
         // Use neural network to decide actions
         const inputs = [
@@ -302,29 +302,29 @@ class Car {
         }
     }
     
-    getSensorReadings(track) {
+    getSensorReadings() {
         const sensorLength = 100;
         const sensors = [];
         
         // Forward sensor
-        sensors.push(this.castRay(0, sensorLength, track));
+        sensors.push(this.castRay(0, sensorLength));
         
         // Left sensor
-        sensors.push(this.castRay(-Math.PI/2, sensorLength, track));
+        sensors.push(this.castRay(-Math.PI/2, sensorLength));
         
         // Right sensor
-        sensors.push(this.castRay(Math.PI/2, sensorLength, track));
+        sensors.push(this.castRay(Math.PI/2, sensorLength));
         
         // Forward-left sensor
-        sensors.push(this.castRay(-Math.PI/4, sensorLength, track));
+        sensors.push(this.castRay(-Math.PI/4, sensorLength));
         
         // Forward-right sensor
-        sensors.push(this.castRay(Math.PI/4, sensorLength, track));
+        sensors.push(this.castRay(Math.PI/4, sensorLength));
         
         return sensors;
     }
     
-    castRay(angleOffset, length, track) {
+    castRay(angleOffset, length) {
         const rayAngle = this.angle + angleOffset;
         let distance = 0;
         const stepSize = 2;
@@ -505,7 +505,7 @@ function updateSimulation() {
         
         cars.forEach(car => {
             if (!car.crashed && !car.completed) {
-                car.update(track);
+                car.update();
                 allDone = false;
             }
         });
@@ -519,9 +519,7 @@ function updateSimulation() {
     
     // Update progress
     let totalProgress = 0;
-    let completedCount = 0;
     cars.forEach(car => {
-        if (car.completed) completedCount++;
         totalProgress += car.checkpoints.filter(c => c.passed).length;
     });
     
