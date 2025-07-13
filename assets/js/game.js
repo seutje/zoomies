@@ -267,29 +267,23 @@ class Car {
         
         // Calculate fitness based on distance to next checkpoint
         let nextCheckpointIndex = this.checkpoints.findIndex(c => !c.passed);
-        if (nextCheckpointIndex === -1) nextCheckpointIndex = 0;
-        
+        if (nextCheckpointIndex === -1) {
+            nextCheckpointIndex = this.checkpoints.length - 1;
+        }
+
         const nextCheckpoint = this.checkpoints[nextCheckpointIndex];
         const dx = nextCheckpoint.x - this.x;
         const dy = nextCheckpoint.y - this.y;
         const distanceToNext = Math.sqrt(dx * dx + dy * dy);
-        
+
         // Update fitness
         this.fitness = this.distance + (8 - nextCheckpointIndex) * 1000 - distanceToNext;
-        
-        // Check for checkpoint passing
-        this.checkpoints.forEach((checkpoint, index) => {
-            if (!checkpoint.passed) {
-                const dx = checkpoint.x - this.x;
-                const dy = checkpoint.y - this.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 30) {
-                    checkpoint.passed = true;
-                    this.distance += 1000;
-                }
-            }
-        });
+
+        // Check for checkpoint passing in order
+        if (nextCheckpointIndex !== -1 && !nextCheckpoint.passed && distanceToNext < 30) {
+            nextCheckpoint.passed = true;
+            this.distance += 1000;
+        }
         
         // Check for completion
         if (this.checkpoints.every(c => c.passed)) {
