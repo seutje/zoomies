@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Racing Simulator</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <h1>🏎️ AI Racing Simulator</h1>
+    
+    <div class="controls">
+        <div class="slider-container">
+            <label for="populationSlider">Population Size:</label>
+            <input type="range" id="populationSlider" min="10" max="100" value="50">
+            <span class="value-display" id="populationValue">50</span>
+        </div>
+        
+        <div class="slider-container">
+            <label for="speedSlider">Simulation Speed:</label>
+            <input type="range" id="speedSlider" min="1" max="10" value="1">
+            <span class="value-display" id="speedValue">1x</span>
+        </div>
+        
+        <button id="startBtn">Start Training</button>
+        <button id="nextGenBtn" disabled>Next Generation</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+    
+    <canvas id="canvas" width="800" height="600"></canvas>
+    
+    <div class="stats">
+        <div class="generation-info">
+            <span>Generation: <span id="generationNumber">0</span></span>
+            <span>Best Time: <span id="bestTime">N/A</span></span>
+        </div>
+        
+        <div class="progress-container">
+            <div>Progress: <span id="completionRate">0%</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        
+        <div class="leaderboard">
+            <h3>🏆 Current Generation Leaderboard</h3>
+            <div id="leaderboardList"></div>
+        </div>
+    </div>
+    <script src="assets/js/game.js"></script>
+</body>
+</html>

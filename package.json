@@ -1,0 +1,19 @@
+{
+  "name": "soccerdoodle",
+  "version": "1.0.0",
+  "description": "Soccer Doodle Game",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint assets/**/*.js tests/**/*.js -c eslint.config.mjs",
+    "start": "node server.js",
+    "train": "node train.js"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "@eslint/eslintrc": "^2.1.2",
+    "@eslint/js": "^8.0.0",
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^30.0.4"
+  }
+}
