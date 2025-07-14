@@ -10,6 +10,7 @@ const speedValue = document.getElementById('speedValue');
 const lapSlider = document.getElementById('lapSlider');
 const lapValue = document.getElementById('lapValue');
 const nextGenBtn = document.getElementById('nextGenBtn');
+const startStopBtn = document.getElementById('startStopBtn');
 const generationEl = document.getElementById('generation');
 const bestFitnessEl = document.getElementById('bestFitness');
 const carsRunningEl = document.getElementById('carsRunning');
@@ -27,6 +28,7 @@ let bestFitnessOverall = 0;
 let track = [];
 let checkpoints = [];
 let isRunning = false;
+let started = false;
 
 // Car class
 class Car {
@@ -733,5 +735,17 @@ nextGenBtn.addEventListener('click', () => {
     nextGeneration();
 });
 
-// Start the simulation
-start();
+startStopBtn.addEventListener('click', () => {
+    if (!started) {
+        start();
+        startStopBtn.textContent = 'Stop';
+        started = true;
+    } else if (isRunning) {
+        isRunning = false;
+        startStopBtn.textContent = 'Start';
+    } else {
+        isRunning = true;
+        startStopBtn.textContent = 'Stop';
+        update();
+    }
+});
