@@ -30,6 +30,8 @@ let bestOverallCars = [];
 let bestFitnessOverall = 0;
 let track = [];
 let checkpoints = [];
+let outerBounds = { x: 50, y: 50, width: 700, height: 700, radius: 50 };
+let innerBounds = { x: 150, y: 150, width: 500, height: 500, radius: 50 };
 let isRunning = false;
 let started = false;
 
@@ -209,8 +211,8 @@ class Car {
         // Create a point in the center of the car
         const center = { x: this.x, y: this.y };
         
-        const outer = { x: 50, y: 50, width: 700, height: 700, radius: 50 };
-        const inner = { x: 150, y: 150, width: 500, height: 500, radius: 50 };
+        const outer = outerBounds;
+        const inner = innerBounds;
 
         const insideOuter = pointInRoundedRect(center, outer);
         const insideInner = pointInRoundedRect(center, inner);
@@ -511,93 +513,43 @@ function sigmoid(x) {
 }
 
 // Initialize the track
-function initTrack() {
+async function loadTrack() {
+    const res = await fetch('assets/tracks/square.json');
+    const data = await res.json();
     track = [];
-    checkpoints = [];
+    checkpoints = data.checkpoints;
+    outerBounds = data.outerRect;
+    innerBounds = data.innerRect;
 
-    const center = 400;
-    const outerSize = 700;
-    const innerSize = 500;
-    const radius = 50;
+    function cubic(p0, p1, p2, p3, t) {
+        const u = 1 - t;
+        const tt = t * t;
+        const uu = u * u;
+        const uuu = uu * u;
+        const ttt = tt * t;
 
-    const outer = { x: center - outerSize / 2, y: center - outerSize / 2, size: outerSize, radius };
-    const inner = { x: center - innerSize / 2, y: center - innerSize / 2, size: innerSize, radius };
+        const x = uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x;
+        const y = uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y;
+        return { x, y };
+    }
 
-    function addRoundedRectSegments(rect, type) {
-        const step = 0.1;
-        const { x, y, size, radius } = rect;
-        const endX = x + size;
-        const endY = y + size;
-
-        track.push({ x1: x + radius, y1: y, x2: endX - radius, y2: y, type });
-        for (let angle = -Math.PI / 2; angle < 0; angle += step) {
-            const x1 = endX - radius + radius * Math.cos(angle);
-            const y1 = y + radius + radius * Math.sin(angle);
-            const x2 = endX - radius + radius * Math.cos(Math.min(0, angle + step));
-            const y2 = y + radius + radius * Math.sin(Math.min(0, angle + step));
-            track.push({ x1, y1, x2, y2, type });
-        }
-        track.push({ x1: endX, y1: y + radius, x2: endX, y2: endY - radius, type });
-        for (let angle = 0; angle < Math.PI / 2; angle += step) {
-            const x1 = endX - radius + radius * Math.cos(angle);
-            const y1 = endY - radius + radius * Math.sin(angle);
-            const x2 = endX - radius + radius * Math.cos(Math.min(Math.PI / 2, angle + step));
-            const y2 = endY - radius + radius * Math.sin(Math.min(Math.PI / 2, angle + step));
-            track.push({ x1, y1, x2, y2, type });
-        }
-        track.push({ x1: endX - radius, y1: endY, x2: x + radius, y2: endY, type });
-        for (let angle = Math.PI / 2; angle < Math.PI; angle += step) {
-            const x1 = x + radius + radius * Math.cos(angle);
-            const y1 = endY - radius + radius * Math.sin(angle);
-            const x2 = x + radius + radius * Math.cos(Math.min(Math.PI, angle + step));
-            const y2 = endY - radius + radius * Math.sin(Math.min(Math.PI, angle + step));
-            track.push({ x1, y1, x2, y2, type });
-        }
-        track.push({ x1: x, y1: endY - radius, x2: x, y2: y + radius, type });
-        for (let angle = Math.PI; angle < 1.5 * Math.PI; angle += step) {
-            const x1 = x + radius + radius * Math.cos(angle);
-            const y1 = y + radius + radius * Math.sin(angle);
-            const x2 = x + radius + radius * Math.cos(Math.min(1.5 * Math.PI, angle + step));
-            const y2 = y + radius + radius * Math.sin(Math.min(1.5 * Math.PI, angle + step));
-            track.push({ x1, y1, x2, y2, type });
+    function addCurveSegments(segment, type) {
+        const steps = 20;
+        const p0 = { x: segment.start[0], y: segment.start[1] };
+        const p1 = { x: segment.cp1[0], y: segment.cp1[1] };
+        const p2 = { x: segment.cp2[0], y: segment.cp2[1] };
+        const p3 = { x: segment.end[0], y: segment.end[1] };
+        for (let i = 0; i < steps; i++) {
+            const t1 = i / steps;
+            const t2 = (i + 1) / steps;
+            const pt1 = cubic(p0, p1, p2, p3, t1);
+            const pt2 = cubic(p0, p1, p2, p3, t2);
+            track.push({ x1: pt1.x, y1: pt1.y, x2: pt2.x, y2: pt2.y, type });
         }
     }
 
-    addRoundedRectSegments(outer, 'outer');
-    addRoundedRectSegments(inner, 'inner');
-
-    const midSize = (outerSize + innerSize) / 2;
-    const midRect = { x: center - midSize / 2, y: center - midSize / 2, size: midSize, radius };
-
-    const step = midSize / 5;
-
-    for (let i = 1; i <= 5; i++) {
-        checkpoints.push({ x: midRect.x + step * i, y: midRect.y, radius: 60 });
-    }
-    for (let i = 1; i <= 5; i++) {
-        checkpoints.push({ x: midRect.x + midSize, y: midRect.y + step * i, radius: 60 });
-    }
-    for (let i = 1; i <= 5; i++) {
-        checkpoints.push({ x: midRect.x + midSize - step * i, y: midRect.y + midSize, radius: 60 });
-    }
-    for (let i = 1; i <= 5; i++) {
-        checkpoints.push({ x: midRect.x, y: midRect.y + midSize - step * i, radius: 60 });
-    }
-
-    // Pull corner checkpoints slightly toward the track center
-    const offset = 30;
-    // 5th checkpoint (top-right corner)
-    checkpoints[4].x -= offset;
-    checkpoints[4].y += offset;
-    // 10th checkpoint (bottom-right corner)
-    checkpoints[9].x -= offset;
-    checkpoints[9].y -= offset;
-    // 15th checkpoint (bottom-left corner)
-    checkpoints[14].x += offset;
-    checkpoints[14].y -= offset;
-    // 20th checkpoint (top-left corner)
-    checkpoints[19].x += offset;
-    checkpoints[19].y += offset;
+    data.curves.outer.forEach(seg => addCurveSegments(seg, 'outer'));
+    data.curves.inner.forEach(seg => addCurveSegments(seg, 'inner'));
 }
 
 // Draw the track
@@ -770,8 +722,8 @@ function updateLeaderboard() {
 }
 
 // Start the simulation
-function start() {
-    initTrack();
+async function start() {
+    await loadTrack();
     initCars();
     isRunning = true;
     bestFitnessEl.textContent = Math.round(bestFitnessOverall);
@@ -803,9 +755,9 @@ nextGenBtn.addEventListener('click', () => {
     nextGeneration();
 });
 
-startStopBtn.addEventListener('click', () => {
+startStopBtn.addEventListener('click', async () => {
     if (!started) {
-        start();
+        await start();
         startStopBtn.textContent = 'Stop';
         started = true;
     } else if (isRunning) {
