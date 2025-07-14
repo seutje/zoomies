@@ -27,11 +27,11 @@ let isRunning = false;
 // Car class
 class Car {
     constructor(brain = null) {
-        this.x = 100;
-        this.y = 250;
+        this.x = checkpoints.length ? checkpoints[0].x : 100;
+        this.y = checkpoints.length ? checkpoints[0].y : 250;
         this.width = 20;
         this.height = 10;
-        this.angle = 0;
+        this.angle = Math.PI / 2; // start facing downward
         this.speed = 0;
         this.maxSpeed = 5;
         this.acceleration = 0.2;
