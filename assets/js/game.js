@@ -19,6 +19,7 @@ let simulationSpeed = 1;
 let generation = 1;
 let cars = [];
 let bestCars = [];
+let bestFitnessOverall = 0;
 let track = [];
 let checkpoints = [];
 let isRunning = false;
@@ -595,10 +596,15 @@ function nextGeneration() {
     // Select top 5 cars
     bestCars = cars.slice(0, 5);
     
+    // Update best fitness
+    if (bestCars[0].fitness > bestFitnessOverall) {
+        bestFitnessOverall = bestCars[0].fitness;
+    }
+
     // Update UI
     generation++;
     generationEl.textContent = generation;
-    bestFitnessEl.textContent = Math.round(bestCars[0].fitness);
+    bestFitnessEl.textContent = Math.round(bestFitnessOverall);
     
     // Create new generation
     initCars();
@@ -671,6 +677,7 @@ function start() {
     initTrack();
     initCars();
     isRunning = true;
+    bestFitnessEl.textContent = Math.round(bestFitnessOverall);
     update();
 }
 
