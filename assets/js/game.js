@@ -47,6 +47,8 @@ class Car {
         this.checkpointIndex = 0;
         this.lap = 0;
         this.time = 0;
+        this.lastFitness = 0;
+        this.framesSinceFitness = 0;
         this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
         
         // Neural network
@@ -124,6 +126,18 @@ class Car {
         
         // Update fitness
         this.calculateFitness();
+
+        // Track fitness progress
+        if (this.fitness > this.lastFitness) {
+            this.lastFitness = this.fitness;
+            this.framesSinceFitness = 0;
+        } else {
+            this.framesSinceFitness++;
+            if (this.framesSinceFitness >= 180) {
+                this.dead = true;
+                return;
+            }
+        }
     }
     
     getReadings() {
