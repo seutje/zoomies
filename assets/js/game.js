@@ -580,6 +580,21 @@ function initTrack() {
     for (let i = 1; i <= 5; i++) {
         checkpoints.push({ x: midRect.x, y: midRect.y + midSize - step * i, radius: 40 });
     }
+
+    // Pull corner checkpoints slightly toward the track center
+    const offset = 30;
+    // 5th checkpoint (top-right corner)
+    checkpoints[4].x -= offset;
+    checkpoints[4].y += offset;
+    // 10th checkpoint (bottom-right corner)
+    checkpoints[9].x -= offset;
+    checkpoints[9].y -= offset;
+    // 15th checkpoint (bottom-left corner)
+    checkpoints[14].x += offset;
+    checkpoints[14].y -= offset;
+    // 20th checkpoint (top-left corner)
+    checkpoints[19].x += offset;
+    checkpoints[19].y += offset;
 }
 
 // Draw the track
