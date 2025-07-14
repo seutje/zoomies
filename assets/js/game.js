@@ -22,6 +22,7 @@ let lapCount = 5;
 let generation = 1;
 let cars = [];
 let bestCars = [];
+let bestOverallCars = [];
 let bestFitnessOverall = 0;
 let track = [];
 let checkpoints = [];
@@ -600,13 +601,17 @@ function initCars() {
 function nextGeneration() {
     // Sort cars by fitness
     cars.sort((a, b) => b.fitness - a.fitness);
-    
-    // Select top 5 cars
-    bestCars = cars.slice(0, 5);
-    
-    // Update best fitness
-    if (bestCars[0].fitness > bestFitnessOverall) {
-        bestFitnessOverall = bestCars[0].fitness;
+
+    const currentBestFitness = cars[0].fitness;
+
+    if (currentBestFitness > bestFitnessOverall || bestOverallCars.length === 0) {
+        // Current generation has a new best performer
+        bestFitnessOverall = currentBestFitness;
+        bestOverallCars = cars.slice(0, 5);
+        bestCars = bestOverallCars;
+    } else {
+        // Use best overall performers if current gen is worse
+        bestCars = bestOverallCars;
     }
 
     // Update UI
