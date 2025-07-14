@@ -160,7 +160,7 @@ button:active {
     border: 1px solid rgba(0, 255, 136, 0.3);
     backdrop-filter: blur(10px);
     overflow: hidden;
-    min-height: 150px;
+    min-height: 250px;
 }
 
 #leaderboard h3 {
