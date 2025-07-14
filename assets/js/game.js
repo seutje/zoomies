@@ -133,7 +133,7 @@ class Car {
             this.framesSinceFitness = 0;
         } else {
             this.framesSinceFitness++;
-            if (this.framesSinceFitness >= 60 * simulationSpeed) {
+            if (this.framesSinceFitness >= 180) {
                 this.dead = true;
                 return;
             }
