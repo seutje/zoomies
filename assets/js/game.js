@@ -531,7 +531,7 @@ function initTrack() {
         const x = centerX + trackWidth * Math.cos(angle);
         const y = centerY + trackHeight * Math.sin(angle);
         
-        checkpoints.push({ x, y, radius: 20 });
+        checkpoints.push({ x, y, radius: 40 });
     }
 }
 
