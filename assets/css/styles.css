@@ -97,6 +97,7 @@ select {
     color: #00ff88;
     font-family: 'Orbitron', monospace;
     cursor: pointer;
+    min-width: 500px;
 }
 
 button {
