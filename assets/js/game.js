@@ -565,7 +565,10 @@ function drawTrack() {
     // Draw checkpoints with animation
     for (let i = 0; i < checkpoints.length; i++) {
         const checkpoint = checkpoints[i];
-        const pulse = Math.sin(Date.now() * 0.005 + i) * 0.2 + 0.8;
+        // Reverse the pulsating order by offsetting the phase with the
+        // reversed checkpoint index.
+        const reverseIndex = checkpoints.length - 1 - i;
+        const pulse = Math.sin(Date.now() * 0.005 + reverseIndex) * 0.2 + 0.8;
         
         // Outer glow
         ctx.shadowColor = '#ffaa00';
