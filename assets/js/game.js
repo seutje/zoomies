@@ -37,7 +37,13 @@ class Car {
         this.y = checkpoints.length ? checkpoints[0].y : 400;
         this.width = 20;
         this.height = 10;
-        this.angle = Math.PI / 2; // start facing downward
+        if (checkpoints.length > 1) {
+            const target = checkpoints[1];
+            const start = checkpoints[0];
+            this.angle = Math.atan2(target.y - start.y, target.x - start.x);
+        } else {
+            this.angle = Math.PI / 2; // fallback
+        }
         this.speed = 0;
         this.maxSpeed = 5;
         this.acceleration = 0.2;
