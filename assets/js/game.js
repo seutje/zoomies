@@ -1,4 +1,4 @@
-// Canvas setup
+// Game canvas and context
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -7,642 +7,680 @@ const populationSlider = document.getElementById('populationSlider');
 const populationValue = document.getElementById('populationValue');
 const speedSlider = document.getElementById('speedSlider');
 const speedValue = document.getElementById('speedValue');
-const startBtn = document.getElementById('startBtn');
 const nextGenBtn = document.getElementById('nextGenBtn');
-const resetBtn = document.getElementById('resetBtn');
-const generationNumberEl = document.getElementById('generationNumber');
-const bestTimeEl = document.getElementById('bestTime');
-const completionRateEl = document.getElementById('completionRate');
-const progressFillEl = document.getElementById('progressFill');
-const leaderboardListEl = document.getElementById('leaderboardList');
+const generationEl = document.getElementById('generation');
+const bestFitnessEl = document.getElementById('bestFitness');
+const carsRunningEl = document.getElementById('carsRunning');
+const leaderboardList = document.getElementById('leaderboardList');
 
-// Track configuration
-const track = {
-    width: 60,
-    checkpoints: [
-        { x: 160, y: 300, passed: false },
-        { x: 200, y: 200, passed: false },
-        { x: 400, y: 150, passed: false },
-        { x: 600, y: 200, passed: false },
-        { x: 640, y: 300, passed: false },
-        { x: 600, y: 400, passed: false },
-        { x: 400, y: 450, passed: false },
-        { x: 200, y: 400, passed: false }
-    ],
-    startX: 160,
-    startY: 300,
-    startAngle: 0
-};
-
-// Neural Network class
-class NeuralNetwork {
-    constructor(inputNodes, hiddenNodes, outputNodes, activationFunction = 'sigmoid') {
-        this.inputNodes = inputNodes;
-        this.hiddenNodes = hiddenNodes;
-        this.outputNodes = outputNodes;
-        this.activationFunction = activationFunction;
-        
-        // Initialize weights with random values
-        this.weightsIH = this.createMatrix(this.hiddenNodes, this.inputNodes);
-        this.weightsHO = this.createMatrix(this.outputNodes, this.hiddenNodes);
-        
-        // Initialize bias
-        this.biasH = this.createMatrix(this.hiddenNodes, 1);
-        this.biasO = this.createMatrix(this.outputNodes, 1);
-        
-        this.randomizeWeights();
-    }
-    
-    createMatrix(rows, cols) {
-        const matrix = new Array(rows);
-        for (let i = 0; i < rows; i++) {
-            matrix[i] = new Array(cols).fill(0);
-        }
-        return matrix;
-    }
-    
-    randomizeWeights() {
-        this.weightsIH = this.weightsIH.map(row => row.map(() => Math.random() * 2 - 1));
-        this.weightsHO = this.weightsHO.map(row => row.map(() => Math.random() * 2 - 1));
-        this.biasH = this.biasH.map(row => row.map(() => Math.random() * 2 - 1));
-        this.biasO = this.biasO.map(row => row.map(() => Math.random() * 2 - 1));
-    }
-    
-    mutate(mutationRate) {
-        this.weightsIH = this.mutateMatrix(this.weightsIH, mutationRate);
-        this.weightsHO = this.mutateMatrix(this.weightsHO, mutationRate);
-        this.biasH = this.mutateMatrix(this.biasH, mutationRate);
-        this.biasO = this.mutateMatrix(this.biasO, mutationRate);
-    }
-    
-    mutateMatrix(matrix, mutationRate) {
-        return matrix.map(row => 
-            row.map(val => {
-                if (Math.random() < mutationRate) {
-                    return val + (Math.random() * 0.4 - 0.2); // Small random adjustment
-                }
-                return val;
-            })
-        );
-    }
-    
-    predict(inputArray) {
-        let inputs = this.createMatrix(this.inputNodes, 1);
-        for (let i = 0; i < this.inputNodes; i++) {
-            inputs[i][0] = inputArray[i];
-        }
-        
-        // Calculate hidden layer
-        let hidden = this.matrixMultiply(this.weightsIH, inputs);
-        hidden = this.matrixAdd(hidden, this.biasH);
-        hidden = this.activate(hidden);
-        
-        // Calculate output layer
-        let outputs = this.matrixMultiply(this.weightsHO, hidden);
-        outputs = this.matrixAdd(outputs, this.biasO);
-        outputs = this.activate(outputs);
-        
-        return outputs.flat();
-    }
-    
-    matrixMultiply(a, b) {
-        const result = this.createMatrix(a.length, b[0].length);
-        for (let i = 0; i < a.length; i++) {
-            for (let j = 0; j < b[0].length; j++) {
-                let sum = 0;
-                for (let k = 0; k < a[0].length; k++) {
-                    sum += a[i][k] * b[k][j];
-                }
-                result[i][j] = sum;
-            }
-        }
-        return result;
-    }
-    
-    matrixAdd(a, b) {
-        const result = this.createMatrix(a.length, a[0].length);
-        for (let i = 0; i < a.length; i++) {
-            for (let j = 0; j < a[0].length; j++) {
-                result[i][j] = a[i][j] + b[i][j];
-            }
-        }
-        return result;
-    }
-    
-    activate(matrix) {
-        const result = this.createMatrix(matrix.length, matrix[0].length);
-        for (let i = 0; i < matrix.length; i++) {
-            for (let j = 0; j < matrix[0].length; j++) {
-                if (this.activationFunction === 'sigmoid') {
-                    result[i][j] = 1 / (1 + Math.exp(-matrix[i][j]));
-                } else if (this.activationFunction === 'relu') {
-                    result[i][j] = Math.max(0, matrix[i][j]);
-                } else {
-                    result[i][j] = matrix[i][j]; // Linear
-                }
-            }
-        }
-        return result;
-    }
-    
-    static crossover(parentA, parentB) {
-        const child = new NeuralNetwork(
-            parentA.inputNodes,
-            parentA.hiddenNodes,
-            parentA.outputNodes,
-            parentA.activationFunction
-        );
-        
-        // Perform crossover for weights and biases
-        child.weightsIH = NeuralNetwork.matrixCrossover(parentA.weightsIH, parentB.weightsIH);
-        child.weightsHO = NeuralNetwork.matrixCrossover(parentA.weightsHO, parentB.weightsHO);
-        child.biasH = NeuralNetwork.matrixCrossover(parentA.biasH, parentB.biasH);
-        child.biasO = NeuralNetwork.matrixCrossover(parentA.biasO, parentB.biasO);
-        
-        return child;
-    }
-    
-    static matrixCrossover(matrixA, matrixB) {
-        const rows = matrixA.length;
-        const cols = matrixA[0].length;
-        const result = new Array(rows);
-        
-        for (let i = 0; i < rows; i++) {
-            result[i] = new Array(cols);
-            const crossoverPoint = Math.floor(Math.random() * cols);
-            
-            for (let j = 0; j < cols; j++) {
-                result[i][j] = j < crossoverPoint ? matrixA[i][j] : matrixB[i][j];
-            }
-        }
-        
-        return result;
-    }
-    
-    clone() {
-        const clone = new NeuralNetwork(
-            this.inputNodes,
-            this.hiddenNodes,
-            this.outputNodes,
-            this.activationFunction
-        );
-        
-        clone.weightsIH = this.copyMatrix(this.weightsIH);
-        clone.weightsHO = this.copyMatrix(this.weightsHO);
-        clone.biasH = this.copyMatrix(this.biasH);
-        clone.biasO = this.copyMatrix(this.biasO);
-        
-        return clone;
-    }
-    
-    copyMatrix(matrix) {
-        return matrix.map(row => [...row]);
-    }
-}
+// Game parameters
+let populationSize = 50;
+let simulationSpeed = 1;
+let generation = 1;
+let cars = [];
+let bestCars = [];
+let track = [];
+let checkpoints = [];
+let animationId = null;
+let isRunning = false;
 
 // Car class
 class Car {
-    constructor(x, y, angle, color, brain) {
-        this.x = x;
-        this.y = y;
-        this.angle = angle;
+    constructor(brain = null) {
+        this.x = 100;
+        this.y = 250;
+        this.width = 20;
+        this.height = 10;
+        this.angle = 0;
         this.speed = 0;
         this.maxSpeed = 5;
         this.acceleration = 0.2;
         this.friction = 0.05;
         this.turnSpeed = 0.03;
-        this.width = 20;
-        this.height = 40;
-        this.color = color;
-        this.brain = brain || new NeuralNetwork(7, 8, 2);
         this.fitness = 0;
+        this.dead = false;
+        this.finished = false;
+        this.checkpointIndex = 0;
         this.time = 0;
-        this.distance = 0;
-        this.checkpoints = [...track.checkpoints.map(c => ({ ...c, passed: false }))];
-        this.crashed = false;
-        this.completed = false;
-        this.sensors = [];
+        this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+        
+        // Neural network
+        if (brain) {
+            this.brain = brain.copy();
+            this.brain.mutate(0.1);
+        } else {
+            this.brain = new NeuralNetwork(5, 8, 4);
+        }
+        
+        // Ray casting for vision
+        this.rays = [];
+        this.rayLength = 100;
+        this.raySpread = Math.PI / 2;
+        
+        for (let i = 0; i < 5; i++) {
+            this.rays.push({
+                angle: this.raySpread * (i / 4 - 0.5)
+            });
+        }
+        
+        // Sensor readings
+        this.readings = new Array(this.rays.length).fill(0);
     }
     
     update() {
-        if (this.crashed || this.completed) return;
+        if (this.dead || this.finished) return;
         
-        this.time += 0.1;
+        this.time++;
         
         // Get sensor readings
-        this.sensors = this.getSensorReadings();
+        this.getReadings();
         
-        // Use neural network to decide actions
-        const inputs = [
-            this.sensors[0] / 100, // Forward
-            this.sensors[1] / 100, // Left
-            this.sensors[2] / 100, // Right
-            this.sensors[3] / 100, // Forward-left
-            this.sensors[4] / 100, // Forward-right
-            this.speed / this.maxSpeed, // Normalized speed
-            this.angle / (2 * Math.PI) // Normalized angle
-        ];
-        
+        // Neural network decision
+        const inputs = this.readings;
         const outputs = this.brain.predict(inputs);
         
-        // Control the car based on neural network output
-        const acceleration = outputs[0] * 2 - 1; // Convert from 0-1 to -1-1
-        const steering = outputs[1] * 2 - 1; // Convert from 0-1 to -1-1
+        // Control the car
+        const forward = outputs[0] > 0.5;
+        const left = outputs[1] > 0.5;
+        const right = outputs[2] > 0.5;
+        const brake = outputs[3] > 0.5;
         
-        // Update speed
-        this.speed += acceleration * this.acceleration;
-        this.speed = Math.max(-this.maxSpeed/2, Math.min(this.maxSpeed, this.speed));
+        if (forward) this.speed += this.acceleration;
+        if (brake) this.speed -= this.acceleration * 2;
+        
+        if (left) this.angle -= this.turnSpeed;
+        if (right) this.angle += this.turnSpeed;
         
         // Apply friction
-        this.speed *= (1 - this.friction);
-        
-        // Update angle based on steering
-        if (Math.abs(this.speed) > 0.1) {
-            this.angle += steering * this.turnSpeed * (this.speed / this.maxSpeed);
+        if (this.speed > 0) {
+            this.speed -= this.friction;
+            if (this.speed < 0) this.speed = 0;
+        } else if (this.speed < 0) {
+            this.speed += this.friction;
+            if (this.speed > 0) this.speed = 0;
         }
         
-        // Update position
-        this.x += Math.sin(this.angle) * this.speed;
-        this.y -= Math.cos(this.angle) * this.speed;
+        // Limit speed
+        if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
+        if (this.speed < -this.maxSpeed / 2) this.speed = -this.maxSpeed / 2;
         
-        // Calculate fitness based on distance to next checkpoint
-        let nextCheckpointIndex = this.checkpoints.findIndex(c => !c.passed);
-        if (nextCheckpointIndex === -1) {
-            nextCheckpointIndex = this.checkpoints.length - 1;
-        }
-
-        const nextCheckpoint = this.checkpoints[nextCheckpointIndex];
-        const dx = nextCheckpoint.x - this.x;
-        const dy = nextCheckpoint.y - this.y;
-        const distanceToNext = Math.sqrt(dx * dx + dy * dy);
-
-        // Update fitness
-        this.fitness = this.distance + (8 - nextCheckpointIndex) * 1000 - distanceToNext;
-
-        // Check for checkpoint passing in order
-        if (nextCheckpointIndex !== -1 && !nextCheckpoint.passed && distanceToNext < 30) {
-            nextCheckpoint.passed = true;
-            this.distance += 1000;
-        }
-        
-        // Check for completion
-        if (this.checkpoints.every(c => c.passed)) {
-            this.completed = true;
-            this.fitness += 10000; // Bonus for completing the track
-            this.fitness -= this.time * 10; // Penalty for time taken
-        }
+        // Move car
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
         
         // Check for collision with track boundaries
-        const leftSensor = this.sensors[1];
-        const rightSensor = this.sensors[2];
-        const frontSensor = this.sensors[0];
+        if (this.isOffTrack()) {
+            this.dead = true;
+            return;
+        }
         
-        if (leftSensor < 5 || rightSensor < 5 || frontSensor < 5) {
-            this.crashed = true;
+        // Check for checkpoint
+        this.checkCheckpoint();
+        
+        // Update fitness
+        this.calculateFitness();
+    }
+    
+    getReadings() {
+        for (let i = 0; i < this.rays.length; i++) {
+            const rayAngle = this.angle + this.rays[i].angle;
+            const start = { x: this.x, y: this.y };
+            const end = {
+                x: this.x + Math.cos(rayAngle) * this.rayLength,
+                y: this.y + Math.sin(rayAngle) * this.rayLength
+            };
+            
+            // Check intersection with track boundaries
+            let minDistance = this.rayLength;
+            
+            for (let j = 0; j < track.length; j++) {
+                const intersection = this.getIntersection(
+                    start, end, 
+                    { x: track[j].x1, y: track[j].y1 }, 
+                    { x: track[j].x2, y: track[j].y2 }
+                );
+                
+                if (intersection) {
+                    const distance = Math.sqrt(
+                        Math.pow(intersection.x - start.x, 2) + 
+                        Math.pow(intersection.y - start.y, 2)
+                    );
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                    }
+                }
+            }
+            
+            this.readings[i] = 1 - (minDistance / this.rayLength);
         }
     }
     
-    getSensorReadings() {
-        const sensorLength = 100;
-        const sensors = [];
+    getIntersection(A, B, C, D) {
+        const tTop = (D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x);
+        const uTop = (C.y - A.y) * (A.x - B.x) - (C.x - A.x) * (A.y - B.y);
+        const bottom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
         
-        // Forward sensor
-        sensors.push(this.castRay(0, sensorLength));
-        
-        // Left sensor
-        sensors.push(this.castRay(-Math.PI/2, sensorLength));
-        
-        // Right sensor
-        sensors.push(this.castRay(Math.PI/2, sensorLength));
-        
-        // Forward-left sensor
-        sensors.push(this.castRay(-Math.PI/4, sensorLength));
-        
-        // Forward-right sensor
-        sensors.push(this.castRay(Math.PI/4, sensorLength));
-        
-        return sensors;
-    }
-    
-    castRay(angleOffset, length) {
-        const rayAngle = this.angle + angleOffset;
-        let distance = 0;
-        const stepSize = 2;
-        
-        while (distance < length) {
-            const checkX = this.x + Math.sin(rayAngle) * distance;
-            const checkY = this.y - Math.cos(rayAngle) * distance;
-            
-            // Check if out of bounds
-            if (checkX < 0 || checkX > canvas.width || checkY < 0 || checkY > canvas.height) {
-                break;
+        if (bottom !== 0) {
+            const t = tTop / bottom;
+            const u = uTop / bottom;
+            if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+                return {
+                    x: A.x + t * (B.x - A.x),
+                    y: A.y + t * (B.y - A.y)
+                };
             }
-            
-            // Check if on track
-            const trackCenter = { x: canvas.width/2, y: canvas.height/2 };
-            const dx = checkX - trackCenter.x;
-            const dy = checkY - trackCenter.y;
-            const distFromCenter = Math.sqrt(dx*dx + dy*dy);
-            
-            // Simple circular track for collision detection
-            if (distFromCenter < 150 || distFromCenter > 250) {
-                break;
-            }
-            
-            distance += stepSize;
         }
         
-        return distance;
+        return null;
+    }
+    
+    isOffTrack() {
+        // Check if car is inside the track
+        const left = this.x - this.width / 2;
+        const right = this.x + this.width / 2;
+        const top = this.y - this.height / 2;
+        const bottom = this.y + this.height / 2;
+        
+        // Create a point in the center of the car
+        const center = { x: this.x, y: this.y };
+        
+        // Check if this point is between the inner and outer boundaries
+        let isInside = false;
+        
+        // Simple check: if the car is within the track width
+        if (center.x < 50 || center.x > 750 || center.y < 50 || center.y > 450) {
+            return true;
+        }
+        
+        // Check if car is in the inner part of the oval
+        const centerX = 400;
+        const centerY = 250;
+        const outerRx = 350;
+        const outerRy = 200;
+        const innerRx = 250;
+        const innerRy = 150;
+        
+        const outerEllipse = Math.pow(center.x - centerX, 2) / Math.pow(outerRx, 2) + 
+                            Math.pow(center.y - centerY, 2) / Math.pow(outerRy, 2);
+                            
+        const innerEllipse = Math.pow(center.x - centerX, 2) / Math.pow(innerRx, 2) + 
+                            Math.pow(center.y - centerY, 2) / Math.pow(innerRy, 2);
+        
+        // If car is outside the outer ellipse or inside the inner ellipse
+        return outerEllipse > 1 || innerEllipse < 1;
+    }
+    
+    checkCheckpoint() {
+        if (this.checkpointIndex >= checkpoints.length) {
+            this.finished = true;
+            return;
+        }
+        
+        const checkpoint = checkpoints[this.checkpointIndex];
+        const distance = Math.sqrt(
+            Math.pow(this.x - checkpoint.x, 2) + 
+            Math.pow(this.y - checkpoint.y, 2)
+        );
+        
+        if (distance < checkpoint.radius) {
+            this.checkpointIndex++;
+        }
+    }
+    
+    calculateFitness() {
+        // Fitness based on checkpoints passed
+        this.fitness = this.checkpointIndex * 1000;
+        
+        // Add bonus for distance to next checkpoint
+        if (this.checkpointIndex < checkpoints.length) {
+            const checkpoint = checkpoints[this.checkpointIndex];
+            const distance = Math.sqrt(
+                Math.pow(this.x - checkpoint.x, 2) + 
+                Math.pow(this.y - checkpoint.y, 2)
+            );
+            this.fitness += Math.max(0, 1000 - distance);
+        } else {
+            // Bonus for finishing quickly
+            this.fitness += 10000 - this.time;
+        }
+        
+        // Penalty for time
+        this.fitness -= this.time * 0.1;
     }
     
     draw() {
+        if (this.dead) return;
+        
         ctx.save();
-        
-        // Draw car shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.fillRect(this.x - this.width/2 + 2, this.y - this.height/2 + 2, this.width, this.height);
-        
-        // Draw car
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
-        ctx.fillStyle = this.crashed ? '#ff4444' : this.color;
-        ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
         
-        // Draw car outline
-        ctx.strokeStyle = this.crashed ? '#ff0000' : '#ffffff';
+        // Car body with gradient
+        const gradient = ctx.createLinearGradient(-this.width/2, 0, this.width/2, 0);
+        gradient.addColorStop(0, this.color);
+        gradient.addColorStop(1, this.adjustBrightness(this.color, -30));
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
+        ctx.fill();
+        
+        // Car outline
+        ctx.strokeStyle = this.adjustBrightness(this.color, 50);
         ctx.lineWidth = 1;
-        ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+        ctx.stroke();
         
-        // Draw car direction indicator
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(-2, -this.height/2 - 5, 4, 10);
+        // Car direction indicator
+        ctx.fillStyle = this.adjustBrightness(this.color, 50);
+        ctx.beginPath();
+        ctx.rect(this.width/2 - 5, -this.height/4, 5, this.height/2);
+        ctx.fill();
         
         ctx.restore();
         
-        // Draw sensors
-        if (!this.crashed && !this.completed) {
-            this.sensors.forEach((sensor, index) => {
-                const angles = [0, -Math.PI/2, Math.PI/2, -Math.PI/4, Math.PI/4];
-                const sensorAngle = this.angle + angles[index];
+        // Draw sensor rays
+        if (!this.dead && !this.finished) {
+            for (let i = 0; i < this.rays.length; i++) {
+                const rayAngle = this.angle + this.rays[i].angle;
+                const start = { x: this.x, y: this.y };
+                const end = {
+                    x: this.x + Math.cos(rayAngle) * this.rayLength * (1 - this.readings[i]),
+                    y: this.y + Math.sin(rayAngle) * this.rayLength * (1 - this.readings[i])
+                };
                 
-                const endX = this.x + Math.sin(sensorAngle) * sensor;
-                const endY = this.y - Math.cos(sensorAngle) * sensor;
-                
-                ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(endX, endY);
-                ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + sensor/500})`;
+                ctx.strokeStyle = `rgba(0, 255, 136, ${0.3 - this.readings[i] * 0.3})`;
                 ctx.lineWidth = 1;
-                ctx.stroke();
-                
-                // Sensor endpoint
                 ctx.beginPath();
-                ctx.arc(endX, endY, 3, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + sensor/500})`;
-                ctx.fill();
-            });
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+            }
         }
     }
-}
-
-// Game state
-let cars = [];
-let generation = 0;
-let bestTime = Infinity;
-let simulationSpeed = 1;
-let populationSize = 50;
-let isRunning = false;
-let animationId = null;
-
-// Initialize the simulation
-function initSimulation() {
-    cars = [];
-    generation = 0;
-    bestTime = Infinity;
     
-    // Create initial population
-    for (let i = 0; i < populationSize; i++) {
-        const hue = (i * 360 / populationSize) % 360;
-        const color = `hsl(${hue}, 80%, 60%)`;
-        const car = new Car(
-            track.startX,
-            track.startY,
-            track.startAngle,
-            color,
-            new NeuralNetwork(7, 8, 2)
-        );
-        cars.push(car);
+    adjustBrightness(color, amount) {
+        const hsl = color.match(/\d+/g);
+        return `hsl(${hsl[0]}, ${hsl[1]}%, ${Math.max(0, Math.min(100, parseInt(hsl[2]) + amount))}%)`;
     }
     
-    updateUI();
+    copy() {
+        const copy = new Car(this.brain);
+        copy.fitness = this.fitness;
+        return copy;
+    }
 }
 
+// Neural Network class
+class NeuralNetwork {
+    constructor(inputNodes, hiddenNodes, outputNodes) {
+        this.inputNodes = inputNodes;
+        this.hiddenNodes = hiddenNodes;
+        this.outputNodes = outputNodes;
+        
+        // Initialize weights
+        this.weights_ih = new Matrix(this.hiddenNodes, this.inputNodes);
+        this.weights_ho = new Matrix(this.outputNodes, this.hiddenNodes);
+        
+        this.weights_ih.randomize();
+        this.weights_ho.randomize();
+        
+        // Initialize biases
+        this.bias_h = new Matrix(this.hiddenNodes, 1);
+        this.bias_o = new Matrix(this.outputNodes, 1);
+        
+        this.bias_h.randomize();
+        this.bias_o.randomize();
+    }
+    
+    predict(inputArray) {
+        // Input -> Hidden
+        let inputs = Matrix.fromArray(inputArray);
+        let hidden = Matrix.multiply(this.weights_ih, inputs);
+        hidden.add(this.bias_h);
+        hidden.map(sigmoid);
+        
+        // Hidden -> Output
+        let outputs = Matrix.multiply(this.weights_ho, hidden);
+        outputs.add(this.bias_o);
+        outputs.map(sigmoid);
+        
+        return outputs.toArray();
+    }
+    
+    copy() {
+        let result = new NeuralNetwork(this.inputNodes, this.hiddenNodes, this.outputNodes);
+        result.weights_ih = this.weights_ih.copy();
+        result.weights_ho = this.weights_ho.copy();
+        result.bias_h = this.bias_h.copy();
+        result.bias_o = this.bias_o.copy();
+        return result;
+    }
+    
+    mutate(rate) {
+        function mutate(val) {
+            if (Math.random() < rate) {
+                return val + Math.random() * 0.4 - 0.2;
+            }
+            return val;
+        }
+        
+        this.weights_ih.map(mutate);
+        this.weights_ho.map(mutate);
+        this.bias_h.map(mutate);
+        this.bias_o.map(mutate);
+    }
+}
+
+// Matrix class for neural network calculations
+class Matrix {
+    constructor(rows, cols) {
+        this.rows = rows;
+        this.cols = cols;
+        this.data = [];
+        
+        for (let i = 0; i < this.rows; i++) {
+            this.data[i] = [];
+            for (let j = 0; j < this.cols; j++) {
+                this.data[i][j] = 0;
+            }
+        }
+    }
+    
+    static fromArray(arr) {
+        let m = new Matrix(arr.length, 1);
+        for (let i = 0; i < arr.length; i++) {
+            m.data[i][0] = arr[i];
+        }
+        return m;
+    }
+    
+    toArray() {
+        let arr = [];
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                arr.push(this.data[i][j]);
+            }
+        }
+        return arr;
+    }
+    
+    randomize() {
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                this.data[i][j] = Math.random() * 2 - 1;
+            }
+        }
+    }
+    
+    static multiply(a, b) {
+        if (a.cols !== b.rows) {
+            console.error("Columns of A must match rows of B");
+            return undefined;
+        }
+        
+        let result = new Matrix(a.rows, b.cols);
+        
+        for (let i = 0; i < result.rows; i++) {
+            for (let j = 0; j < result.cols; j++) {
+                let sum = 0;
+                for (let k = 0; k < a.cols; k++) {
+                    sum += a.data[i][k] * b.data[k][j];
+                }
+                result.data[i][j] = sum;
+            }
+        }
+        
+        return result;
+    }
+    
+    add(n) {
+        if (n instanceof Matrix) {
+            for (let i = 0; i < this.rows; i++) {
+                for (let j = 0; j < this.cols; j++) {
+                    this.data[i][j] += n.data[i][j];
+                }
+            }
+        } else {
+            for (let i = 0; i < this.rows; i++) {
+                for (let j = 0; j < this.cols; j++) {
+                    this.data[i][j] += n;
+                }
+            }
+        }
+    }
+    
+    map(func) {
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                this.data[i][j] = func(this.data[i][j]);
+            }
+        }
+    }
+    
+    copy() {
+        let result = new Matrix(this.rows, this.cols);
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                result.data[i][j] = this.data[i][j];
+            }
+        }
+        return result;
+    }
+}
+
+// Activation function
+function sigmoid(x) {
+    return 1 / (1 + Math.exp(-x));
+}
+
+// Initialize the track
+function initTrack() {
+    track = [];
+    checkpoints = [];
+    
+    // Create elongated oval track boundaries
+    const centerX = 400;
+    const centerY = 250;
+    const outerRx = 350;
+    const outerRy = 200;
+    const innerRx = 250;
+    const innerRy = 150;
+    
+    // Create outer boundary
+    for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+        const x1 = centerX + outerRx * Math.cos(angle);
+        const y1 = centerY + outerRy * Math.sin(angle);
+        const x2 = centerX + outerRx * Math.cos(angle + 0.1);
+        const y2 = centerY + outerRy * Math.sin(angle + 0.1);
+        
+        track.push({ x1, y1, x2, y2, type: 'outer' });
+    }
+    
+    // Create inner boundary
+    for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+        const x1 = centerX + innerRx * Math.cos(angle);
+        const y1 = centerY + innerRy * Math.sin(angle);
+        const x2 = centerX + innerRx * Math.cos(angle + 0.1);
+        const y2 = centerY + innerRy * Math.sin(angle + 0.1);
+        
+        track.push({ x1, y1, x2, y2, type: 'inner' });
+    }
+    
+    // Create checkpoints along the track
+    const numCheckpoints = 20;
+    const trackWidth = (outerRx + innerRx) / 2;
+    const trackHeight = (outerRy + innerRy) / 2;
+    
+    for (let i = 0; i < numCheckpoints; i++) {
+        const angle = (i / numCheckpoints) * Math.PI * 2;
+        const x = centerX + trackWidth * Math.cos(angle);
+        const y = centerY + trackHeight * Math.sin(angle);
+        
+        checkpoints.push({ x, y, radius: 20 });
+    }
+}
+
+// Draw the track
 function drawTrack() {
-    // Clear canvas with gradient
-    const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, 250);
-    gradient.addColorStop(0, '#1a1a2e');
-    gradient.addColorStop(1, '#0a0a0a');
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw track background with gradient
+    const gradient = ctx.createRadialGradient(400, 250, 0, 400, 250, 350);
+    gradient.addColorStop(0, '#001122');
+    gradient.addColorStop(1, '#000000');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw track
-    ctx.strokeStyle = '#666';
-    ctx.fillStyle = '#222';
-    ctx.lineWidth = track.width;
+    // Draw track boundaries with glow effect
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur = 5;
     
-    ctx.beginPath();
-    ctx.arc(canvas.width/2, canvas.height/2, 200, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.arc(canvas.width/2, canvas.height/2, 200 - track.width/2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Draw inner circle
-    ctx.beginPath();
-    ctx.arc(canvas.width/2, canvas.height/2, 200 - track.width, 0, Math.PI * 2);
-    ctx.fillStyle = '#0a0a0a';
-    ctx.fill();
-    
-    // Draw checkpoints
-    track.checkpoints.forEach((checkpoint, index) => {
+    for (const line of track) {
+        ctx.strokeStyle = line.type === 'outer' ? '#00ff88' : '#00ffff';
+        ctx.lineWidth = line.type === 'outer' ? 4 : 3;
         ctx.beginPath();
-        ctx.arc(checkpoint.x, checkpoint.y, 8, 0, Math.PI * 2);
-        ctx.fillStyle = '#444';
-        ctx.fill();
-        ctx.strokeStyle = '#666';
-        ctx.lineWidth = 2;
+        ctx.moveTo(line.x1, line.y1);
+        ctx.lineTo(line.x2, line.y2);
         ctx.stroke();
+    }
+    
+    ctx.shadowBlur = 0;
+    
+    // Draw checkpoints with animation
+    for (let i = 0; i < checkpoints.length; i++) {
+        const checkpoint = checkpoints[i];
+        const pulse = Math.sin(Date.now() * 0.005 + i) * 0.2 + 0.8;
+        
+        // Outer glow
+        ctx.shadowColor = '#ffaa00';
+        ctx.shadowBlur = 20 * pulse;
+        
+        ctx.fillStyle = `rgba(255, 170, 0, ${0.3 * pulse})`;
+        ctx.beginPath();
+        ctx.arc(checkpoint.x, checkpoint.y, checkpoint.radius * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Inner circle
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(255, 170, 0, ${0.5 * pulse})`;
+        ctx.beginPath();
+        ctx.arc(checkpoint.x, checkpoint.y, checkpoint.radius * 0.7 * pulse, 0, Math.PI * 2);
+        ctx.fill();
         
         // Checkpoint number
-        ctx.fillStyle = '#888';
-        ctx.font = '12px Orbitron';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px Orbitron';
         ctx.textAlign = 'center';
-        ctx.fillText((index + 1).toString(), checkpoint.x, checkpoint.y + 4);
-    });
-    
-    // Draw start/finish line
-    ctx.beginPath();
-    ctx.moveTo(track.startX - 20, track.startY - 30);
-    ctx.lineTo(track.startX + 20, track.startY - 30);
-    ctx.strokeStyle = '#00ff88';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    // Start text
-    ctx.fillStyle = '#00ff88';
-    ctx.font = '14px Orbitron';
-    ctx.textAlign = 'center';
-    ctx.fillText('START', track.startX, track.startY - 40);
+        ctx.textBaseline = 'middle';
+        ctx.fillText((i + 1).toString(), checkpoint.x, checkpoint.y);
+    }
 }
 
-function updateSimulation() {
-    if (!isRunning) return;
+// Initialize cars
+function initCars() {
+    cars = [];
     
-    // Update cars multiple times based on simulation speed
-    for (let i = 0; i < simulationSpeed; i++) {
-        let allDone = true;
-        
-        cars.forEach(car => {
-            if (!car.crashed && !car.completed) {
-                car.update();
-                allDone = false;
-            }
-        });
-        
-        if (allDone) {
-            isRunning = false;
-            nextGenBtn.disabled = false;
-            break;
+    if (bestCars.length > 0) {
+        // Create new generation from best cars
+        for (let i = 0; i < populationSize; i++) {
+            const parentIndex = i % bestCars.length;
+            const parent = bestCars[parentIndex];
+            cars.push(new Car(parent.brain));
+        }
+    } else {
+        // Create random cars
+        for (let i = 0; i < populationSize; i++) {
+            cars.push(new Car());
         }
     }
-    
-    // Update progress
-    let totalProgress = 0;
-    cars.forEach(car => {
-        totalProgress += car.checkpoints.filter(c => c.passed).length;
-    });
-    
-    const progress = (totalProgress / (cars.length * track.checkpoints.length)) * 100;
-    progressFillEl.style.width = `${progress}%`;
-    completionRateEl.textContent = `${Math.round(progress)}%`;
-    
-    // Update leaderboard
-    updateLeaderboard();
-    
-    // Draw everything
-    drawTrack();
-    cars.forEach(car => car.draw());
-    
-    // Continue animation
-    if (isRunning) {
-        animationId = requestAnimationFrame(updateSimulation);
-    }
 }
 
-function updateLeaderboard() {
-    const sortedCars = [...cars].sort((a, b) => b.fitness - a.fitness);
-    
-    leaderboardListEl.innerHTML = '';
-    for (let i = 0; i < Math.min(10, sortedCars.length); i++) {
-        const car = sortedCars[i];
-        const entry = document.createElement('div');
-        entry.className = 'car-entry';
-        
-        const colorIndicator = document.createElement('div');
-        colorIndicator.className = 'car-color';
-        colorIndicator.style.backgroundColor = car.color;
-        
-        const status = car.completed ? '✅' : car.crashed ? '💥' : '🏁';
-        
-        entry.innerHTML = `
-            <div>
-                ${colorIndicator.outerHTML}
-                <span>#${i + 1}</span>
-            </div>
-            <div>
-                <span>${status} ${Math.round(car.fitness)}</span>
-            </div>
-        `;
-        
-        leaderboardListEl.appendChild(entry);
-    }
-}
-
-function updateUI() {
-    generationNumberEl.textContent = generation;
-    if (bestTime !== Infinity) {
-        bestTimeEl.textContent = `${bestTime.toFixed(2)}s`;
-    } else {
-        bestTimeEl.textContent = 'N/A';
-    }
-}
-
+// Calculate the next generation
 function nextGeneration() {
-    nextGenBtn.disabled = true;
-    
     // Sort cars by fitness
     cars.sort((a, b) => b.fitness - a.fitness);
     
-    // Update best time if any car completed the track
-    const completedCars = cars.filter(c => c.completed);
-    if (completedCars.length > 0) {
-        const fastest = completedCars.reduce((prev, curr) => 
-            prev.time < curr.time ? prev : curr
-        );
-        if (fastest.time < bestTime) {
-            bestTime = fastest.time;
+    // Select top 5 cars
+    bestCars = cars.slice(0, 5);
+    
+    // Update UI
+    generation++;
+    generationEl.textContent = generation;
+    bestFitnessEl.textContent = Math.round(bestCars[0].fitness);
+    
+    // Create new generation
+    initCars();
+}
+
+// Update the simulation
+function update() {
+    if (!isRunning) return;
+    
+    // Update cars multiple times based on simulation speed
+    for (let s = 0; s < simulationSpeed; s++) {
+        let activeCars = 0;
+        
+        for (const car of cars) {
+            car.update();
+            if (!car.dead && !car.finished) {
+                activeCars++;
+            }
+        }
+        
+        carsRunningEl.textContent = activeCars;
+        
+        // Calculate track progress
+        const maxCheckpoints = Math.max(...cars.map(c => c.checkpointIndex));
+        const progress = (maxCheckpoints / checkpoints.length) * 100;
+        document.getElementById('trackProgress').textContent = Math.round(progress) + '%';
+        
+        // Update leaderboard
+        updateLeaderboard();
+        
+        if (activeCars === 0) {
+            nextGeneration();
         }
     }
     
-    // Select top 5 performers
-    const topPerformers = cars.slice(0, 5);
+    // Draw everything
+    drawTrack();
     
-    // Create new population
-    const newPopulation = [];
-    
-    // Keep the best performer (elitism)
-    const bestClone = topPerformers[0].brain.clone();
-    newPopulation.push(new Car(
-        track.startX,
-        track.startY,
-        track.startAngle,
-        topPerformers[0].color,
-        bestClone
-    ));
-    
-    // Generate offspring
-    for (let i = 1; i < populationSize; i++) {
-        // Select parents based on fitness
-        const parentA = topPerformers[Math.floor(Math.random() * topPerformers.length)];
-        const parentB = topPerformers[Math.floor(Math.random() * topPerformers.length)];
-        
-        // Create child through crossover and mutation
-        const childBrain = NeuralNetwork.crossover(parentA.brain, parentB.brain);
-        childBrain.mutate(0.1); // Mutation rate
-        
-        const hue = (i * 360 / populationSize) % 360;
-        const color = `hsl(${hue}, 80%, 60%)`;
-        
-        newPopulation.push(new Car(
-            track.startX,
-            track.startY,
-            track.startAngle,
-            color,
-            childBrain
-        ));
+    for (const car of cars) {
+        car.draw();
     }
     
-    cars = newPopulation;
-    generation++;
+    animationId = requestAnimationFrame(update);
+}
+
+// Update leaderboard
+function updateLeaderboard() {
+    const sortedCars = [...cars].sort((a, b) => b.fitness - a.fitness).slice(0, 10);
     
-    // Reset track checkpoints
-    track.checkpoints.forEach(cp => cp.passed = false);
-    
-    updateUI();
+    leaderboardList.innerHTML = '';
+    sortedCars.forEach((car, index) => {
+        const item = document.createElement('div');
+        item.className = 'leaderboard-item';
+        
+        let status = 'active';
+        if (car.dead) status = 'crashed';
+        else if (car.finished) status = 'finished';
+        
+        item.innerHTML = `
+            <span><span class="rank">#${index + 1}</span> Car ${car.color.match(/\d+/)[0]}</span>
+            <span class="fitness">${Math.round(car.fitness)}</span>
+            <span class="status ${status}">${status}</span>
+        `;
+        leaderboardList.appendChild(item);
+    });
+}
+
+// Start the simulation
+function start() {
+    initTrack();
+    initCars();
     isRunning = true;
-    nextGenBtn.disabled = false;
-    updateSimulation();
+    update();
 }
 
 // Event listeners
@@ -653,35 +691,12 @@ populationSlider.addEventListener('input', () => {
 
 speedSlider.addEventListener('input', () => {
     simulationSpeed = parseInt(speedSlider.value);
-    speedValue.textContent = `${simulationSpeed}x`;
-});
-
-startBtn.addEventListener('click', () => {
-    initSimulation();
-    isRunning = true;
-    startBtn.disabled = true;
-    nextGenBtn.disabled = false;
-    cancelAnimationFrame(animationId);
-    updateSimulation();
+    speedValue.textContent = simulationSpeed + 'x';
 });
 
 nextGenBtn.addEventListener('click', () => {
-    if (isRunning) {
-        isRunning = false;
-        cancelAnimationFrame(animationId);
-    }
     nextGeneration();
 });
 
-resetBtn.addEventListener('click', () => {
-    isRunning = false;
-    cancelAnimationFrame(animationId);
-    initSimulation();
-    startBtn.disabled = false;
-    nextGenBtn.disabled = true;
-    drawTrack();
-});
-
-// Initial setup
-initSimulation();
-drawTrack();
+// Start the simulation
+start();
