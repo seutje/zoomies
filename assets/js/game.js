@@ -34,7 +34,7 @@ let started = false;
 class Car {
     constructor(brain = null) {
         this.x = checkpoints.length ? checkpoints[0].x : 100;
-        this.y = checkpoints.length ? checkpoints[0].y : 250;
+        this.y = checkpoints.length ? checkpoints[0].y : 400;
         this.width = 20;
         this.height = 10;
         this.angle = Math.PI / 2; // start facing downward
@@ -200,27 +200,13 @@ class Car {
         // Create a point in the center of the car
         const center = { x: this.x, y: this.y };
         
-        // Simple check: if the car is within the track width
-        if (center.x < 50 || center.x > 750 || center.y < 50 || center.y > 450) {
-            return true;
-        }
-        
-        // Check if car is in the inner part of the oval
-        const centerX = 400;
-        const centerY = 250;
-        const outerRx = 350;
-        const outerRy = 200;
-        const innerRx = 250;
-        const innerRy = 150;
-        
-        const outerEllipse = Math.pow(center.x - centerX, 2) / Math.pow(outerRx, 2) + 
-                            Math.pow(center.y - centerY, 2) / Math.pow(outerRy, 2);
-                            
-        const innerEllipse = Math.pow(center.x - centerX, 2) / Math.pow(innerRx, 2) + 
-                            Math.pow(center.y - centerY, 2) / Math.pow(innerRy, 2);
-        
-        // If car is outside the outer ellipse or inside the inner ellipse
-        return outerEllipse > 1 || innerEllipse < 1;
+        const outer = { x: 50, y: 50, width: 700, height: 700, radius: 50 };
+        const inner = { x: 150, y: 150, width: 500, height: 500, radius: 50 };
+
+        const insideOuter = pointInRoundedRect(center, outer);
+        const insideInner = pointInRoundedRect(center, inner);
+
+        return !insideOuter || insideInner;
     }
     
     checkCheckpoint() {
@@ -325,6 +311,31 @@ class Car {
         copy.fitness = this.fitness;
         return copy;
     }
+}
+
+function pointInRoundedRect(point, rect) {
+    const { x, y, width, height, radius } = rect;
+
+    if (point.x < x || point.x > x + width || point.y < y || point.y > y + height) {
+        return false;
+    }
+
+    if (point.x >= x + radius && point.x <= x + width - radius) {
+        return true;
+    }
+
+    if (point.y >= y + radius && point.y <= y + height - radius) {
+        return true;
+    }
+
+    const corners = [
+        { cx: x + radius, cy: y + radius },
+        { cx: x + width - radius, cy: y + radius },
+        { cx: x + radius, cy: y + height - radius },
+        { cx: x + width - radius, cy: y + height - radius },
+    ];
+
+    return corners.some(c => (point.x - c.cx) ** 2 + (point.y - c.cy) ** 2 <= radius ** 2);
 }
 
 // Neural Network class
@@ -494,46 +505,74 @@ function sigmoid(x) {
 function initTrack() {
     track = [];
     checkpoints = [];
-    
-    // Create elongated oval track boundaries
-    const centerX = 400;
-    const centerY = 250;
-    const outerRx = 350;
-    const outerRy = 200;
-    const innerRx = 250;
-    const innerRy = 150;
-    
-    // Create outer boundary
-    for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
-        const x1 = centerX + outerRx * Math.cos(angle);
-        const y1 = centerY + outerRy * Math.sin(angle);
-        const x2 = centerX + outerRx * Math.cos(angle + 0.1);
-        const y2 = centerY + outerRy * Math.sin(angle + 0.1);
-        
-        track.push({ x1, y1, x2, y2, type: 'outer' });
+
+    const center = 400;
+    const outerSize = 700;
+    const innerSize = 500;
+    const radius = 50;
+
+    const outer = { x: center - outerSize / 2, y: center - outerSize / 2, size: outerSize, radius };
+    const inner = { x: center - innerSize / 2, y: center - innerSize / 2, size: innerSize, radius };
+
+    function addRoundedRectSegments(rect, type) {
+        const step = 0.1;
+        const { x, y, size, radius } = rect;
+        const endX = x + size;
+        const endY = y + size;
+
+        track.push({ x1: x + radius, y1: y, x2: endX - radius, y2: y, type });
+        for (let angle = -Math.PI / 2; angle < 0; angle += step) {
+            const x1 = endX - radius + radius * Math.cos(angle);
+            const y1 = y + radius + radius * Math.sin(angle);
+            const x2 = endX - radius + radius * Math.cos(Math.min(0, angle + step));
+            const y2 = y + radius + radius * Math.sin(Math.min(0, angle + step));
+            track.push({ x1, y1, x2, y2, type });
+        }
+        track.push({ x1: endX, y1: y + radius, x2: endX, y2: endY - radius, type });
+        for (let angle = 0; angle < Math.PI / 2; angle += step) {
+            const x1 = endX - radius + radius * Math.cos(angle);
+            const y1 = endY - radius + radius * Math.sin(angle);
+            const x2 = endX - radius + radius * Math.cos(Math.min(Math.PI / 2, angle + step));
+            const y2 = endY - radius + radius * Math.sin(Math.min(Math.PI / 2, angle + step));
+            track.push({ x1, y1, x2, y2, type });
+        }
+        track.push({ x1: endX - radius, y1: endY, x2: x + radius, y2: endY, type });
+        for (let angle = Math.PI / 2; angle < Math.PI; angle += step) {
+            const x1 = x + radius + radius * Math.cos(angle);
+            const y1 = endY - radius + radius * Math.sin(angle);
+            const x2 = x + radius + radius * Math.cos(Math.min(Math.PI, angle + step));
+            const y2 = endY - radius + radius * Math.sin(Math.min(Math.PI, angle + step));
+            track.push({ x1, y1, x2, y2, type });
+        }
+        track.push({ x1: x, y1: endY - radius, x2: x, y2: y + radius, type });
+        for (let angle = Math.PI; angle < 1.5 * Math.PI; angle += step) {
+            const x1 = x + radius + radius * Math.cos(angle);
+            const y1 = y + radius + radius * Math.sin(angle);
+            const x2 = x + radius + radius * Math.cos(Math.min(1.5 * Math.PI, angle + step));
+            const y2 = y + radius + radius * Math.sin(Math.min(1.5 * Math.PI, angle + step));
+            track.push({ x1, y1, x2, y2, type });
+        }
     }
-    
-    // Create inner boundary
-    for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
-        const x1 = centerX + innerRx * Math.cos(angle);
-        const y1 = centerY + innerRy * Math.sin(angle);
-        const x2 = centerX + innerRx * Math.cos(angle + 0.1);
-        const y2 = centerY + innerRy * Math.sin(angle + 0.1);
-        
-        track.push({ x1, y1, x2, y2, type: 'inner' });
+
+    addRoundedRectSegments(outer, 'outer');
+    addRoundedRectSegments(inner, 'inner');
+
+    const midSize = (outerSize + innerSize) / 2;
+    const midRect = { x: center - midSize / 2, y: center - midSize / 2, size: midSize, radius };
+
+    const step = midSize / 5;
+
+    for (let i = 0; i < 5; i++) {
+        checkpoints.push({ x: midRect.x + step * i, y: midRect.y, radius: 40 });
     }
-    
-    // Create checkpoints along the track
-    const numCheckpoints = 20;
-    const trackWidth = (outerRx + innerRx) / 2;
-    const trackHeight = (outerRy + innerRy) / 2;
-    
-    for (let i = 0; i < numCheckpoints; i++) {
-        const angle = (i / numCheckpoints) * Math.PI * 2;
-        const x = centerX + trackWidth * Math.cos(angle);
-        const y = centerY + trackHeight * Math.sin(angle);
-        
-        checkpoints.push({ x, y, radius: 40 });
+    for (let i = 1; i <= 5; i++) {
+        checkpoints.push({ x: midRect.x + midSize, y: midRect.y + step * i, radius: 40 });
+    }
+    for (let i = 1; i <= 5; i++) {
+        checkpoints.push({ x: midRect.x + midSize - step * i, y: midRect.y + midSize, radius: 40 });
+    }
+    for (let i = 1; i <= 5; i++) {
+        checkpoints.push({ x: midRect.x, y: midRect.y + midSize - step * i, radius: 40 });
     }
 }
 
@@ -543,7 +582,7 @@ function drawTrack() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Draw track background with gradient
-    const gradient = ctx.createRadialGradient(400, 250, 0, 400, 250, 350);
+    const gradient = ctx.createRadialGradient(400, 400, 0, 400, 400, 350);
     gradient.addColorStop(0, '#001122');
     gradient.addColorStop(1, '#000000');
     ctx.fillStyle = gradient;
