@@ -21,7 +21,6 @@ let cars = [];
 let bestCars = [];
 let track = [];
 let checkpoints = [];
-let animationId = null;
 let isRunning = false;
 
 // Car class
@@ -176,16 +175,8 @@ class Car {
     
     isOffTrack() {
         // Check if car is inside the track
-        const left = this.x - this.width / 2;
-        const right = this.x + this.width / 2;
-        const top = this.y - this.height / 2;
-        const bottom = this.y + this.height / 2;
-        
         // Create a point in the center of the car
         const center = { x: this.x, y: this.y };
-        
-        // Check if this point is between the inner and outer boundaries
-        let isInside = false;
         
         // Simple check: if the car is within the track width
         if (center.x < 50 || center.x > 750 || center.y < 50 || center.y > 450) {
@@ -650,7 +641,7 @@ function update() {
         car.draw();
     }
     
-    animationId = requestAnimationFrame(update);
+    requestAnimationFrame(update);
 }
 
 // Update leaderboard
