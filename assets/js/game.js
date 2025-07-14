@@ -9,6 +9,8 @@ const speedSlider = document.getElementById('speedSlider');
 const speedValue = document.getElementById('speedValue');
 const lapSlider = document.getElementById('lapSlider');
 const lapValue = document.getElementById('lapValue');
+const mutationSlider = document.getElementById('mutationSlider');
+const mutationValue = document.getElementById('mutationValue');
 const nextGenBtn = document.getElementById('nextGenBtn');
 const startStopBtn = document.getElementById('startStopBtn');
 const generationEl = document.getElementById('generation');
@@ -20,6 +22,7 @@ const leaderboardList = document.getElementById('leaderboardList');
 let populationSize = 50;
 let simulationSpeed = 1;
 let lapCount = 5;
+let mutationRate = 0.1;
 let generation = 1;
 let cars = [];
 let bestCars = [];
@@ -62,7 +65,7 @@ class Car {
         // Neural network
         if (brain) {
             this.brain = brain.copy();
-            this.brain.mutate(0.1);
+            this.brain.mutate(mutationRate);
         } else {
             this.brain = new NeuralNetwork(5, 8, 4);
         }
@@ -789,6 +792,11 @@ speedSlider.addEventListener('input', () => {
 lapSlider.addEventListener('input', () => {
     lapCount = parseInt(lapSlider.value);
     lapValue.textContent = lapCount;
+});
+
+mutationSlider.addEventListener('input', () => {
+    mutationRate = parseFloat(mutationSlider.value);
+    mutationValue.textContent = mutationRate.toFixed(2);
 });
 
 nextGenBtn.addEventListener('click', () => {
