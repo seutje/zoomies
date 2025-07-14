@@ -21,10 +21,11 @@ beforeEach(() => {
   jest.resetModules();
 });
 
-const loadGame = () => require('../assets/js/game.js');
+const Car = require('../assets/js/Car');
+const { NeuralNetwork } = require('../assets/js/NeuralNetwork');
+const Matrix = require('../assets/js/Matrix');
 
 test('Matrix fromArray and toArray round trip', () => {
-  const { Matrix } = loadGame();
   const arr = [1, 2, 3];
   const m = Matrix.fromArray(arr);
   expect(m.rows).toBe(3);
@@ -33,7 +34,6 @@ test('Matrix fromArray and toArray round trip', () => {
 });
 
 test('Matrix multiply works correctly', () => {
-  const { Matrix } = loadGame();
   const a = new Matrix(2, 2);
   a.data = [[1, 2], [3, 4]];
   const b = new Matrix(2, 2);
@@ -43,7 +43,6 @@ test('Matrix multiply works correctly', () => {
 });
 
 test('NeuralNetwork predict returns expected value', () => {
-  const { NeuralNetwork } = loadGame();
   const nn = new NeuralNetwork(2, 2, 1);
   nn.weights_ih.data = [[1, 1], [1, 1]];
   nn.weights_ho.data = [[1, 1]];
@@ -54,7 +53,6 @@ test('NeuralNetwork predict returns expected value', () => {
 });
 
 test('Car adjustBrightness adjusts value', () => {
-  const { Car } = loadGame();
   const car = new Car();
   const color = 'hsl(200, 50%, 50%)';
   const adjusted = car.adjustBrightness(color, -30);
@@ -62,7 +60,6 @@ test('Car adjustBrightness adjusts value', () => {
 });
 
 test('Car isOffTrack detects boundaries', () => {
-  const { Car } = loadGame();
   const car = new Car();
   car.x = 10;
   car.y = 10;
@@ -73,7 +70,6 @@ test('Car isOffTrack detects boundaries', () => {
 });
 
 test('Car getIntersection returns intersection point', () => {
-  const { Car } = loadGame();
   const car = new Car();
   const A = { x: 0, y: 0 };
   const B = { x: 10, y: 0 };
