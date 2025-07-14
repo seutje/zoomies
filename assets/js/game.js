@@ -30,6 +30,8 @@ let bestOverallCars = [];
 let bestFitnessOverall = 0;
 let track = [];
 let checkpoints = [];
+let outerPolygon = [];
+let innerPolygon = [];
 let outerBounds = { x: 50, y: 50, width: 700, height: 700, radius: 50 };
 let innerBounds = { x: 150, y: 150, width: 500, height: 500, radius: 50 };
 let isRunning = false;
@@ -207,10 +209,14 @@ class Car {
     }
     
     isOffTrack() {
-        // Check if car is inside the track
-        // Create a point in the center of the car
         const center = { x: this.x, y: this.y };
-        
+
+        if (outerPolygon.length && innerPolygon.length) {
+            const insideOuter = pointInPolygon(center, outerPolygon);
+            const insideInner = pointInPolygon(center, innerPolygon);
+            return !insideOuter || insideInner;
+        }
+
         const outer = outerBounds;
         const inner = innerBounds;
 
@@ -347,6 +353,18 @@ function pointInRoundedRect(point, rect) {
     ];
 
     return corners.some(c => (point.x - c.cx) ** 2 + (point.y - c.cy) ** 2 <= radius ** 2);
+}
+
+function pointInPolygon(point, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x, yi = polygon[i].y;
+        const xj = polygon[j].x, yj = polygon[j].y;
+        const intersect = (yi > point.y) !== (yj > point.y) &&
+            point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
+        if (intersect) inside = !inside;
+    }
+    return inside;
 }
 
 // Neural Network class
@@ -520,6 +538,8 @@ async function loadTrack() {
     checkpoints = data.checkpoints;
     outerBounds = data.outerRect;
     innerBounds = data.innerRect;
+    outerPolygon = [];
+    innerPolygon = [];
 
     function cubic(p0, p1, p2, p3, t) {
         const u = 1 - t;
@@ -545,6 +565,10 @@ async function loadTrack() {
             const pt1 = cubic(p0, p1, p2, p3, t1);
             const pt2 = cubic(p0, p1, p2, p3, t2);
             track.push({ x1: pt1.x, y1: pt1.y, x2: pt2.x, y2: pt2.y, type });
+
+            const poly = type === 'outer' ? outerPolygon : innerPolygon;
+            if (i === 0) poly.push(pt1);
+            poly.push(pt2);
         }
     }
 
