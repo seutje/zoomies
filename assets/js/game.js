@@ -17,6 +17,7 @@ const generationEl = document.getElementById('generation');
 const bestFitnessEl = document.getElementById('bestFitness');
 const carsRunningEl = document.getElementById('carsRunning');
 const leaderboardList = document.getElementById('leaderboardList');
+const trackSelect = document.getElementById('trackSelect');
 
 // Game parameters
 let populationSize = 50;
@@ -531,8 +532,8 @@ function sigmoid(x) {
 }
 
 // Initialize the track
-async function loadTrack() {
-    const res = await fetch('assets/tracks/square.json');
+async function loadTrack(name = 'square') {
+    const res = await fetch(`assets/tracks/${name}.json`);
     const data = await res.json();
     track = [];
     checkpoints = data.checkpoints;
@@ -747,7 +748,7 @@ function updateLeaderboard() {
 
 // Start the simulation
 async function start() {
-    await loadTrack();
+    await loadTrack(trackSelect.value);
     initCars();
     isRunning = true;
     bestFitnessEl.textContent = Math.round(bestFitnessOverall);
