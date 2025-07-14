@@ -66,4 +66,9 @@ function sigmoid(x) {
     return 1 / (1 + Math.exp(-x));
 }
 
-if (typeof module !== 'undefined' && module.exports) { module.exports = { NeuralNetwork, sigmoid }; }
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { NeuralNetwork, sigmoid };
+    globalThis.NeuralNetwork = NeuralNetwork;
+} else {
+    globalThis.NeuralNetwork = NeuralNetwork;
+}

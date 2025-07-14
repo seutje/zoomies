@@ -95,4 +95,9 @@ class Matrix {
     }
 }
 
-if (typeof module !== 'undefined' && module.exports) { module.exports = Matrix; }
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Matrix;
+    globalThis.Matrix = Matrix;
+} else {
+    globalThis.Matrix = Matrix;
+}
