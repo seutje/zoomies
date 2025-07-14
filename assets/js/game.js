@@ -141,7 +141,7 @@ class Car {
             this.framesSinceFitness = 0;
         } else {
             this.framesSinceFitness++;
-            if (this.framesSinceFitness >= 180) {
+            if (this.framesSinceFitness >= 300) {
                 this.dead = true;
                 return;
             }
@@ -569,16 +569,16 @@ function initTrack() {
     const step = midSize / 5;
 
     for (let i = 1; i <= 5; i++) {
-        checkpoints.push({ x: midRect.x + step * i, y: midRect.y, radius: 40 });
+        checkpoints.push({ x: midRect.x + step * i, y: midRect.y, radius: 60 });
     }
     for (let i = 1; i <= 5; i++) {
-        checkpoints.push({ x: midRect.x + midSize, y: midRect.y + step * i, radius: 40 });
+        checkpoints.push({ x: midRect.x + midSize, y: midRect.y + step * i, radius: 60 });
     }
     for (let i = 1; i <= 5; i++) {
-        checkpoints.push({ x: midRect.x + midSize - step * i, y: midRect.y + midSize, radius: 40 });
+        checkpoints.push({ x: midRect.x + midSize - step * i, y: midRect.y + midSize, radius: 60 });
     }
     for (let i = 1; i <= 5; i++) {
-        checkpoints.push({ x: midRect.x, y: midRect.y + midSize - step * i, radius: 40 });
+        checkpoints.push({ x: midRect.x, y: midRect.y + midSize - step * i, radius: 60 });
     }
 
     // Pull corner checkpoints slightly toward the track center
