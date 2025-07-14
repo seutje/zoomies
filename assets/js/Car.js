@@ -1,7 +1,7 @@
 // Car class
 /* global track lapCount ctx */
 if (typeof module !== 'undefined' && module.exports) {
-    var { NeuralNetwork } = require('./NeuralNetwork');
+    globalThis.NeuralNetwork = require('./NeuralNetwork').NeuralNetwork;
 }
 class Car {
     constructor(brain = null) {
@@ -31,7 +31,7 @@ class Car {
             this.brain = brain.copy();
             this.brain.mutate(0.1);
         } else {
-            this.brain = new NeuralNetwork(5, 8, 4);
+            this.brain = new globalThis.NeuralNetwork(5, 8, 4);
         }
         
         // Ray casting for vision

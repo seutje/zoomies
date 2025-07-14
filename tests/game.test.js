@@ -80,3 +80,29 @@ test('Car getIntersection returns intersection point', () => {
   const no = car.getIntersection(A, B, { x: 20, y: 20 }, { x: 30, y: 30 });
   expect(no).toBeNull();
 });
+
+const path = require('path');
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+const { JSDOM } = require('jsdom');
+
+test('index.html loads scripts without errors', async () => {
+  const dom = await JSDOM.fromFile(path.join(__dirname, '../index.html'), {
+    runScripts: 'dangerously',
+    resources: 'usable',
+    pretendToBeVisual: true
+  });
+
+  dom.window.HTMLCanvasElement.prototype.getContext = () => ({ });
+
+  await new Promise((resolve, reject) => {
+    dom.window.addEventListener('error', event => {
+      if (event.error && event.error.name === 'SyntaxError') {
+        reject(event.error);
+      }
+    });
+    dom.window.addEventListener('load', () => resolve());
+  });
+  dom.window.close();
+});

@@ -1,6 +1,6 @@
 // Neural Network class
 if (typeof module !== 'undefined' && module.exports) {
-    var Matrix = require('./Matrix');
+    globalThis.Matrix = require('./Matrix');
 }
 class NeuralNetwork {
     constructor(inputNodes, hiddenNodes, outputNodes) {
@@ -9,15 +9,15 @@ class NeuralNetwork {
         this.outputNodes = outputNodes;
         
         // Initialize weights
-        this.weights_ih = new Matrix(this.hiddenNodes, this.inputNodes);
-        this.weights_ho = new Matrix(this.outputNodes, this.hiddenNodes);
+        this.weights_ih = new globalThis.Matrix(this.hiddenNodes, this.inputNodes);
+        this.weights_ho = new globalThis.Matrix(this.outputNodes, this.hiddenNodes);
         
         this.weights_ih.randomize();
         this.weights_ho.randomize();
         
         // Initialize biases
-        this.bias_h = new Matrix(this.hiddenNodes, 1);
-        this.bias_o = new Matrix(this.outputNodes, 1);
+        this.bias_h = new globalThis.Matrix(this.hiddenNodes, 1);
+        this.bias_o = new globalThis.Matrix(this.outputNodes, 1);
         
         this.bias_h.randomize();
         this.bias_o.randomize();
@@ -25,13 +25,13 @@ class NeuralNetwork {
     
     predict(inputArray) {
         // Input -> Hidden
-        let inputs = Matrix.fromArray(inputArray);
-        let hidden = Matrix.multiply(this.weights_ih, inputs);
+        let inputs = globalThis.Matrix.fromArray(inputArray);
+        let hidden = globalThis.Matrix.multiply(this.weights_ih, inputs);
         hidden.add(this.bias_h);
         hidden.map(sigmoid);
         
         // Hidden -> Output
-        let outputs = Matrix.multiply(this.weights_ho, hidden);
+        let outputs = globalThis.Matrix.multiply(this.weights_ho, hidden);
         outputs.add(this.bias_o);
         outputs.map(sigmoid);
         
