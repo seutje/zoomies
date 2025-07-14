@@ -7,6 +7,8 @@ const populationSlider = document.getElementById('populationSlider');
 const populationValue = document.getElementById('populationValue');
 const speedSlider = document.getElementById('speedSlider');
 const speedValue = document.getElementById('speedValue');
+const lapSlider = document.getElementById('lapSlider');
+const lapValue = document.getElementById('lapValue');
 const nextGenBtn = document.getElementById('nextGenBtn');
 const generationEl = document.getElementById('generation');
 const bestFitnessEl = document.getElementById('bestFitness');
@@ -16,6 +18,7 @@ const leaderboardList = document.getElementById('leaderboardList');
 // Game parameters
 let populationSize = 50;
 let simulationSpeed = 1;
+let lapCount = 5;
 let generation = 1;
 let cars = [];
 let bestCars = [];
@@ -41,6 +44,7 @@ class Car {
         this.dead = false;
         this.finished = false;
         this.checkpointIndex = 0;
+        this.lap = 0;
         this.time = 0;
         this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
         
@@ -204,8 +208,12 @@ class Car {
     
     checkCheckpoint() {
         if (this.checkpointIndex >= checkpoints.length) {
-            this.finished = true;
-            return;
+            this.lap++;
+            if (this.lap >= lapCount) {
+                this.finished = true;
+                return;
+            }
+            this.checkpointIndex = 0;
         }
         
         const checkpoint = checkpoints[this.checkpointIndex];
@@ -220,8 +228,8 @@ class Car {
     }
     
     calculateFitness() {
-        // Fitness based on checkpoints passed
-        this.fitness = this.checkpointIndex * 1000;
+        // Fitness based on checkpoints passed and laps completed
+        this.fitness = (this.lap * checkpoints.length + this.checkpointIndex) * 1000;
         
         // Add bonus for distance to next checkpoint
         if (this.checkpointIndex < checkpoints.length) {
@@ -628,8 +636,10 @@ function update() {
         carsRunningEl.textContent = activeCars;
         
         // Calculate track progress
-        const maxCheckpoints = Math.max(...cars.map(c => c.checkpointIndex));
-        const progress = (maxCheckpoints / checkpoints.length) * 100;
+        const maxProgress = Math.max(
+            ...cars.map(c => c.lap * checkpoints.length + c.checkpointIndex)
+        );
+        const progress = (maxProgress / (checkpoints.length * lapCount)) * 100;
         document.getElementById('trackProgress').textContent = Math.round(progress) + '%';
         
         // Update leaderboard
@@ -690,6 +700,11 @@ populationSlider.addEventListener('input', () => {
 speedSlider.addEventListener('input', () => {
     simulationSpeed = parseInt(speedSlider.value);
     speedValue.textContent = simulationSpeed + 'x';
+});
+
+lapSlider.addEventListener('input', () => {
+    lapCount = parseInt(lapSlider.value);
+    lapValue.textContent = lapCount;
 });
 
 nextGenBtn.addEventListener('click', () => {
