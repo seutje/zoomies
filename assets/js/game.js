@@ -749,3 +749,8 @@ startStopBtn.addEventListener('click', () => {
         update();
     }
 });
+
+// Export classes for testing in Node environment
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { Car, NeuralNetwork, Matrix, sigmoid };
+}
