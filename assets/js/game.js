@@ -568,7 +568,7 @@ function initTrack() {
 
     const step = midSize / 5;
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 1; i <= 5; i++) {
         checkpoints.push({ x: midRect.x + step * i, y: midRect.y, radius: 40 });
     }
     for (let i = 1; i <= 5; i++) {
