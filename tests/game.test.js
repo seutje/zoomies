@@ -11,6 +11,7 @@ beforeEach(() => {
     <span id="lapValue"></span>
     <input id="mutationSlider">
     <span id="mutationValue"></span>
+    <select id="trackSelect"></select>
     <button id="nextGenBtn"></button>
     <button id="startStopBtn"></button>
     <div id="generation"></div>
