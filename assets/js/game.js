@@ -177,7 +177,8 @@ class Cat {
             this.speed -= this.friction;
             if (this.speed < 0) this.speed = 0;
         } else if (this.speed < 0) {
-            this.speed += this.friction;
+            // Apply extra friction when moving backwards
+            this.speed += this.friction * 2;
             if (this.speed > 0) this.speed = 0;
         }
         
