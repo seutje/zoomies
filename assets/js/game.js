@@ -598,6 +598,10 @@ async function loadTrack(name = 'square') {
         const res = await fetch(`assets/tracks/${name}.json`);
         data = await res.json();
     }
+    if (!Array.isArray(data.checkpoints) || data.checkpoints.length < 2) {
+        console.error('Track must have at least 2 checkpoints');
+        return false;
+    }
     track = [];
     checkpoints = data.checkpoints;
     outerBounds = data.outerRect;
@@ -638,6 +642,7 @@ async function loadTrack(name = 'square') {
 
     data.curves.outer.forEach(seg => addCurveSegments(seg, 'outer'));
     data.curves.inner.forEach(seg => addCurveSegments(seg, 'inner'));
+    return true;
 }
 
 // Draw the track
@@ -812,7 +817,10 @@ function updateLeaderboard() {
 
 // Start the simulation
 async function start() {
-    await loadTrack(trackSelect.value);
+    const loaded = await loadTrack(trackSelect.value);
+    if (!loaded) {
+        return false;
+    }
     initCats();
     isRunning = true;
     if (bestCatId) {
@@ -821,6 +829,7 @@ async function start() {
         bestFitnessEl.textContent = Math.round(bestFitnessOverall);
     }
     update();
+    return true;
 }
 
 async function resetSimulation() {
@@ -834,9 +843,13 @@ async function resetSimulation() {
     generationEl.textContent = generation;
     bestFitnessEl.textContent = 0;
     if (titleScreen) titleScreen.style.display = 'none';
-    started = true;
-    await start();
-    startStopBtn.textContent = 'Stop';
+    const loaded = await start();
+    if (loaded) {
+        startStopBtn.textContent = 'Stop';
+        started = true;
+    } else {
+        started = false;
+    }
 }
 
 // Event listeners
@@ -878,9 +891,11 @@ if (resetBtn) {
 startStopBtn.addEventListener('click', async () => {
     if (!started) {
         if (titleScreen) titleScreen.style.display = 'none';
-        await start();
-        startStopBtn.textContent = 'Stop';
-        started = true;
+        const loaded = await start();
+        if (loaded) {
+            startStopBtn.textContent = 'Stop';
+            started = true;
+        }
     } else if (isRunning) {
         isRunning = false;
         startStopBtn.textContent = 'Start';
