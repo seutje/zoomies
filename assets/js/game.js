@@ -334,13 +334,34 @@ class Car {
                     x: this.x + Math.cos(rayAngle) * this.rayLength * (1 - this.readings[i]),
                     y: this.y + Math.sin(rayAngle) * this.rayLength * (1 - this.readings[i])
                 };
-                
+
                 ctx.strokeStyle = `rgba(0, 255, 136, ${0.3 - this.readings[i] * 0.3})`;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(start.x, start.y);
                 ctx.lineTo(end.x, end.y);
                 ctx.stroke();
+            }
+
+            // Lines to the next two checkpoints
+            if (checkpoints.length > 0) {
+                const idxNext = this.checkpointIndex < checkpoints.length ? this.checkpointIndex : 0;
+                const cpNext = checkpoints[idxNext];
+                ctx.strokeStyle = 'rgba(255, 170, 0, 0.5)';
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(cpNext.x, cpNext.y);
+                ctx.stroke();
+
+                if (checkpoints.length > 1) {
+                    const idxAfter = (idxNext + 1) % checkpoints.length;
+                    const cpAfter = checkpoints[idxAfter];
+                    ctx.strokeStyle = 'rgba(255, 170, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(cpAfter.x, cpAfter.y);
+                    ctx.stroke();
+                }
             }
         }
     }
