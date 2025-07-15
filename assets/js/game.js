@@ -48,8 +48,8 @@ class Car {
     constructor(brain = null) {
         this.x = checkpoints.length ? checkpoints[0].x : 100;
         this.y = checkpoints.length ? checkpoints[0].y : 400;
-        this.width = 25;
-        this.height = 21;
+        this.width = 21;
+        this.height = 25;
         if (checkpoints.length > 1) {
             const target = checkpoints[1];
             const start = checkpoints[0];
@@ -308,20 +308,10 @@ class Car {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
         
-        // Draw the cat sprite tinted with the car hue
+        // Draw the cat sprite
         if (catImg.complete) {
             ctx.drawImage(catImg, -this.width/2, -this.height/2, this.width, this.height);
-            ctx.globalCompositeOperation = 'source-atop';
-            ctx.fillStyle = this.color;
-            ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
-            ctx.globalCompositeOperation = 'source-over';
         }
-        
-        // Car direction indicator
-        ctx.fillStyle = this.adjustBrightness(this.color, 50);
-        ctx.beginPath();
-        ctx.rect(this.width/2 - 5, -this.height/4, 5, this.height/2);
-        ctx.fill();
         
         ctx.restore();
         
