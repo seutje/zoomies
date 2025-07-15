@@ -17,12 +17,20 @@ if (editorCanvas) {
   const removeBtn = document.getElementById('removeCheckpointBtn');
   const dataArea = document.getElementById('trackData');
   const copyBtn = document.getElementById('copyTrackBtn');
+  const loadBtn = document.getElementById('loadTrackBtn');
 
   const formatSeg = seg => ({
     start: [seg.start.x, seg.start.y],
     cp1: [seg.cp1.x, seg.cp1.y],
     cp2: [seg.cp2.x, seg.cp2.y],
     end: [seg.end.x, seg.end.y]
+  });
+
+  const parseSeg = seg => ({
+    start: { x: seg.start[0], y: seg.start[1] },
+    cp1: { x: seg.cp1[0], y: seg.cp1[1] },
+    cp2: { x: seg.cp2[0], y: seg.cp2[1] },
+    end: { x: seg.end[0], y: seg.end[1] }
   });
 
   const rectFromSegs = segs => {
@@ -189,4 +197,22 @@ if (editorCanvas) {
     removeCp = !removeCp;
     addCp = false;
   });
+
+  if (loadBtn) {
+    loadBtn.addEventListener('click', () => {
+      if (!dataArea) return;
+      try {
+        const data = JSON.parse(dataArea.value);
+        shapes.outer = data.curves.outer.map(parseSeg);
+        shapes.inner = data.curves.inner.map(parseSeg);
+        checkpointsEditor = data.checkpoints.map(c => ({ x: c.x, y: c.y }));
+        drawing = false;
+        currentPoint = null;
+        mode = 'outer';
+        toggleBtn.textContent = 'Editing outer';
+      } catch {
+        alert('Invalid track data');
+      }
+    });
+  }
 }
