@@ -349,6 +349,7 @@ button:active {
     border-radius: 5px;
     margin: 0 10px;
     overflow: hidden;
+    width: 300px;
 }
 
 .attribute-bar-fill {
