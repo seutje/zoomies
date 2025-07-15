@@ -580,8 +580,20 @@ function sigmoid(x) {
 
 // Initialize the track
 async function loadTrack(name = 'square') {
-    const res = await fetch(`assets/tracks/${name}.json`);
-    const data = await res.json();
+    let data;
+    if (name === 'editor') {
+        const textarea = document.getElementById('trackData');
+        try {
+            data = textarea ? JSON.parse(textarea.value) : null;
+        } catch (e) {
+            console.error('Invalid track data');
+            data = null;
+        }
+        if (!data) return;
+    } else {
+        const res = await fetch(`assets/tracks/${name}.json`);
+        data = await res.json();
+    }
     track = [];
     checkpoints = data.checkpoints;
     outerBounds = data.outerRect;
