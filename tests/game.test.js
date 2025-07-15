@@ -16,7 +16,7 @@ beforeEach(() => {
     <button id="startStopBtn"></button>
     <div id="generation"></div>
     <div id="bestFitness"></div>
-    <div id="carsRunning"></div>
+    <div id="catsRunning"></div>
     <div id="leaderboardList"></div>
     <div id="trackProgress"></div>
   `;
@@ -56,34 +56,34 @@ test('NeuralNetwork predict returns expected value', () => {
   expect(out).toBeCloseTo(0.853, 2);
 });
 
-test('Car adjustBrightness adjusts value', () => {
-  const { Car } = loadGame();
-  const car = new Car();
+test('Cat adjustBrightness adjusts value', () => {
+  const { Cat } = loadGame();
+  const cat = new Cat();
   const color = 'hsl(200, 50%, 50%)';
-  const adjusted = car.adjustBrightness(color, -30);
+  const adjusted = cat.adjustBrightness(color, -30);
   expect(adjusted).toBe('hsl(200, 50%, 20%)');
 });
 
-test('Car isOffTrack detects boundaries', () => {
-  const { Car } = loadGame();
-  const car = new Car();
-  car.x = 10;
-  car.y = 10;
-  expect(car.isOffTrack()).toBe(true);
-  car.x = 100;
-  car.y = 250;
-  expect(car.isOffTrack()).toBe(false);
+test('Cat isOffTrack detects boundaries', () => {
+  const { Cat } = loadGame();
+  const cat = new Cat();
+  cat.x = 10;
+  cat.y = 10;
+  expect(cat.isOffTrack()).toBe(true);
+  cat.x = 100;
+  cat.y = 250;
+  expect(cat.isOffTrack()).toBe(false);
 });
 
-test('Car getIntersection returns intersection point', () => {
-  const { Car } = loadGame();
-  const car = new Car();
+test('Cat getIntersection returns intersection point', () => {
+  const { Cat } = loadGame();
+  const cat = new Cat();
   const A = { x: 0, y: 0 };
   const B = { x: 10, y: 0 };
   const C = { x: 5, y: -5 };
   const D = { x: 5, y: 5 };
-  const point = car.getIntersection(A, B, C, D);
+  const point = cat.getIntersection(A, B, C, D);
   expect(point).toEqual({ x: 5, y: 0 });
-  const no = car.getIntersection(A, B, { x: 20, y: 20 }, { x: 30, y: 30 });
+  const no = cat.getIntersection(A, B, { x: 20, y: 20 }, { x: 30, y: 30 });
   expect(no).toBeNull();
 });

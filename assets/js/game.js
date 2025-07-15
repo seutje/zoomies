@@ -2,7 +2,7 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-// Cat sprite used for cars
+// Cat sprite used for cats
 const catImg = new Image();
 catImg.src = 'assets/images/cat.png';
 
@@ -19,7 +19,7 @@ const nextGenBtn = document.getElementById('nextGenBtn');
 const startStopBtn = document.getElementById('startStopBtn');
 const generationEl = document.getElementById('generation');
 const bestFitnessEl = document.getElementById('bestFitness');
-const carsRunningEl = document.getElementById('carsRunning');
+const catsRunningEl = document.getElementById('catsRunning');
 const leaderboardList = document.getElementById('leaderboardList');
 const trackSelect = document.getElementById('trackSelect');
 const titleScreen = document.getElementById('titleScreen');
@@ -30,9 +30,9 @@ let simulationSpeed = 1;
 let lapCount = 5;
 let mutationRate = 0.1;
 let generation = 1;
-let cars = [];
-let bestCars = [];
-let bestOverallCars = [];
+let cats = [];
+let bestCats = [];
+let bestOverallCats = [];
 let bestFitnessOverall = 0;
 let track = [];
 let checkpoints = [];
@@ -43,8 +43,8 @@ let innerBounds = { x: 150, y: 150, width: 500, height: 500, radius: 50 };
 let isRunning = false;
 let started = false;
 
-// Car class
-class Car {
+// Cat class
+class Cat {
     constructor(brain = null) {
         this.x = checkpoints.length ? checkpoints[0].x : 100;
         this.y = checkpoints.length ? checkpoints[0].y : 400;
@@ -108,7 +108,7 @@ class Car {
         const inputs = this.readings;
         const outputs = this.brain.predict(inputs);
         
-        // Control the car
+        // Control the cat
         const forward = outputs[0] > 0.5;
         const left = outputs[1] > 0.5;
         const right = outputs[2] > 0.5;
@@ -133,7 +133,7 @@ class Car {
         if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
         if (this.speed < -this.maxSpeed / 2) this.speed = -this.maxSpeed / 2;
         
-        // Move car
+        // Move cat
         this.x += Math.cos(this.angle) * this.speed;
         this.y += Math.sin(this.angle) * this.speed;
         
@@ -362,7 +362,7 @@ class Car {
     }
     
     copy() {
-        const copy = new Car(this.brain);
+        const copy = new Cat(this.brain);
         copy.fitness = this.fitness;
         return copy;
     }
@@ -674,40 +674,40 @@ function drawTrack() {
     }
 }
 
-// Initialize cars
-function initCars() {
-    cars = [];
+// Initialize cats
+function initCats() {
+    cats = [];
     
-    if (bestCars.length > 0) {
-        // Create new generation from best cars
+    if (bestCats.length > 0) {
+        // Create new generation from best cats
         for (let i = 0; i < populationSize; i++) {
-            const parentIndex = i % bestCars.length;
-            const parent = bestCars[parentIndex];
-            cars.push(new Car(parent.brain));
+            const parentIndex = i % bestCats.length;
+            const parent = bestCats[parentIndex];
+            cats.push(new Cat(parent.brain));
         }
     } else {
-        // Create random cars
+        // Create random cats
         for (let i = 0; i < populationSize; i++) {
-            cars.push(new Car());
+            cats.push(new Cat());
         }
     }
 }
 
 // Calculate the next generation
 function nextGeneration() {
-    // Sort cars by fitness
-    cars.sort((a, b) => b.fitness - a.fitness);
+    // Sort cats by fitness
+    cats.sort((a, b) => b.fitness - a.fitness);
 
-    const currentBestFitness = cars[0].fitness;
+    const currentBestFitness = cats[0].fitness;
 
-    if (currentBestFitness > bestFitnessOverall || bestOverallCars.length === 0) {
+    if (currentBestFitness > bestFitnessOverall || bestOverallCats.length === 0) {
         // Current generation has a new best performer
         bestFitnessOverall = currentBestFitness;
-        bestOverallCars = cars.slice(0, 5);
-        bestCars = bestOverallCars;
+        bestOverallCats = cats.slice(0, 5);
+        bestCats = bestOverallCats;
     } else {
         // Use best overall performers if current gen is worse
-        bestCars = bestOverallCars;
+        bestCats = bestOverallCats;
     }
 
     // Update UI
@@ -716,29 +716,29 @@ function nextGeneration() {
     bestFitnessEl.textContent = Math.round(bestFitnessOverall);
     
     // Create new generation
-    initCars();
+    initCats();
 }
 
 // Update the simulation
 function update() {
     if (!isRunning) return;
     
-    // Update cars multiple times based on simulation speed
+    // Update cats multiple times based on simulation speed
     for (let s = 0; s < simulationSpeed; s++) {
-        let activeCars = 0;
+        let activeCats = 0;
         
-        for (const car of cars) {
-            car.update();
-            if (!car.dead && !car.finished) {
-                activeCars++;
+        for (const cat of cats) {
+            cat.update();
+            if (!cat.dead && !cat.finished) {
+                activeCats++;
             }
         }
         
-        carsRunningEl.textContent = activeCars;
+        catsRunningEl.textContent = activeCats;
         
         // Calculate track progress
         const maxProgress = Math.max(
-            ...cars.map(c => c.lap * checkpoints.length + c.checkpointIndex)
+            ...cats.map(c => c.lap * checkpoints.length + c.checkpointIndex)
         );
         const progress = (maxProgress / (checkpoints.length * lapCount)) * 100;
         document.getElementById('trackProgress').textContent = Math.round(progress) + '%';
@@ -746,7 +746,7 @@ function update() {
         // Update leaderboard
         updateLeaderboard();
         
-        if (activeCars === 0) {
+        if (activeCats === 0) {
             nextGeneration();
         }
     }
@@ -754,8 +754,8 @@ function update() {
     // Draw everything
     drawTrack();
     
-    for (const car of cars) {
-        car.draw();
+    for (const cat of cats) {
+        cat.draw();
     }
     
     requestAnimationFrame(update);
@@ -763,20 +763,20 @@ function update() {
 
 // Update leaderboard
 function updateLeaderboard() {
-    const sortedCars = [...cars].sort((a, b) => b.fitness - a.fitness).slice(0, 10);
+    const sortedCats = [...cats].sort((a, b) => b.fitness - a.fitness).slice(0, 10);
     
     leaderboardList.innerHTML = '';
-    sortedCars.forEach((car, index) => {
+    sortedCats.forEach((cat, index) => {
         const item = document.createElement('div');
         item.className = 'leaderboard-item';
         
         let status = 'active';
-        if (car.dead) status = 'crashed';
-        else if (car.finished) status = 'finished';
+        if (cat.dead) status = 'crashed';
+        else if (cat.finished) status = 'finished';
         
         item.innerHTML = `
-            <span><span class="rank">#${index + 1}</span> Car ${car.color.match(/\d+/)[0]}</span>
-            <span class="fitness">${Math.round(car.fitness)}</span>
+            <span><span class="rank">#${index + 1}</span> Cat ${cat.color.match(/\d+/)[0]}</span>
+            <span class="fitness">${Math.round(cat.fitness)}</span>
             <span class="status ${status}">${status}</span>
         `;
         leaderboardList.appendChild(item);
@@ -786,7 +786,7 @@ function updateLeaderboard() {
 // Start the simulation
 async function start() {
     await loadTrack(trackSelect.value);
-    initCars();
+    initCats();
     isRunning = true;
     bestFitnessEl.textContent = Math.round(bestFitnessOverall);
     update();
@@ -835,5 +835,5 @@ startStopBtn.addEventListener('click', async () => {
 
 // Export classes for testing in Node environment
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Car, NeuralNetwork, Matrix, sigmoid };
+    module.exports = { Cat, NeuralNetwork, Matrix, sigmoid };
 }
