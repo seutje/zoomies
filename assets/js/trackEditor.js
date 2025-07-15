@@ -168,6 +168,16 @@ if (editorCanvas) {
       const pos = getPos(e);
       dragging.seg[dragging.type].x = pos.x;
       dragging.seg[dragging.type].y = pos.y;
+
+      if (dragging.type === 'end') {
+        const segs = shapes[mode];
+        const idx = segs.indexOf(dragging.seg);
+        if (idx !== -1 && segs.length > 0) {
+          const nextSeg = segs[(idx + 1) % segs.length];
+          nextSeg.start.x = pos.x;
+          nextSeg.start.y = pos.y;
+        }
+      }
     }
   });
 
