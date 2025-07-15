@@ -35,6 +35,15 @@ body {
     gap: 15px;
 }
 
+#buttonRow {
+    display: flex;
+    gap: 20px;
+}
+
+#buttonRow button {
+    flex: 1;
+}
+
 .control-group {
     display: flex;
     justify-content: space-between;

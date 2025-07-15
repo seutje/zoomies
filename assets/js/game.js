@@ -19,6 +19,7 @@ const mutationSlider = document.getElementById('mutationSlider');
 const mutationValue = document.getElementById('mutationValue');
 const nextGenBtn = document.getElementById('nextGenBtn');
 const startStopBtn = document.getElementById('startStopBtn');
+const resetBtn = document.getElementById('resetBtn');
 const generationEl = document.getElementById('generation');
 const bestFitnessEl = document.getElementById('bestFitness');
 const catsRunningEl = document.getElementById('catsRunning');
@@ -814,8 +815,28 @@ async function start() {
     await loadTrack(trackSelect.value);
     initCats();
     isRunning = true;
-    bestFitnessEl.textContent = `#${bestCatId} ${Math.round(bestFitnessOverall)}`;
+    if (bestCatId) {
+        bestFitnessEl.textContent = `#${bestCatId} ${Math.round(bestFitnessOverall)}`;
+    } else {
+        bestFitnessEl.textContent = Math.round(bestFitnessOverall);
+    }
     update();
+}
+
+async function resetSimulation() {
+    isRunning = false;
+    bestCats = [];
+    bestOverallCats = [];
+    bestFitnessOverall = 0;
+    bestCatId = null;
+    generation = 1;
+    nextCatId = 1;
+    generationEl.textContent = generation;
+    bestFitnessEl.textContent = 0;
+    if (titleScreen) titleScreen.style.display = 'none';
+    started = true;
+    await start();
+    startStopBtn.textContent = 'Stop';
 }
 
 // Event listeners
@@ -847,6 +868,12 @@ mutationSlider.addEventListener('input', () => {
 nextGenBtn.addEventListener('click', () => {
     nextGeneration();
 });
+
+if (resetBtn) {
+    resetBtn.addEventListener('click', async () => {
+        await resetSimulation();
+    });
+}
 
 startStopBtn.addEventListener('click', async () => {
     if (!started) {
