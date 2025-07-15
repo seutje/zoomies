@@ -6,6 +6,7 @@ if (editorCanvas) {
   let mode = 'outer';
   let currentPoint = null;
   let drawing = true;
+  let lastDrawTime = 0;
   let dragging = null;
   let checkpointsEditor = [];
   let addCp = false;
@@ -137,6 +138,9 @@ if (editorCanvas) {
     }
 
     if (drawing) {
+      const now = Date.now();
+      if (now - lastDrawTime < 200) return;
+      lastDrawTime = now;
       if (!currentPoint) {
         currentPoint = { x: pos.x, y: pos.y };
       } else {
