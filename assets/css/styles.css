@@ -61,6 +61,7 @@ label {
     color: #00ff88;
     text-transform: uppercase;
     letter-spacing: 1px;
+    width: 200px;
 }
 
 input[type="range"] {
@@ -336,4 +337,29 @@ button:active {
     border-radius: 10px;
     padding: 10px;
     font-family: monospace;
+}
+.attribute-container {
+    display: flex;
+    align-items: center;
+}
+
+.attribute-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    margin: 0 10px;
+    overflow: hidden;
+    width: 300px;
+}
+
+.attribute-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, #00ff88, #00ffff);
+    width: 40%;
+}
+
+.attr-btn {
+    padding: 5px 10px;
+    min-width: 30px;
 }
