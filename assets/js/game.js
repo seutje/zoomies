@@ -152,6 +152,13 @@ class Cat {
         // Update fitness
         this.calculateFitness();
 
+        // Track best performer in real time
+        if (this.fitness > bestFitnessOverall) {
+            bestFitnessOverall = this.fitness;
+            bestCatId = this.id;
+            bestFitnessEl.textContent = `#${bestCatId} ${Math.round(bestFitnessOverall)}`;
+        }
+
         // Track fitness progress
         if (this.fitness > this.lastFitness) {
             this.lastFitness = this.fitness;
