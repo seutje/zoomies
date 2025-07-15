@@ -18,6 +18,7 @@ const bestFitnessEl = document.getElementById('bestFitness');
 const carsRunningEl = document.getElementById('carsRunning');
 const leaderboardList = document.getElementById('leaderboardList');
 const trackSelect = document.getElementById('trackSelect');
+const titleScreen = document.getElementById('titleScreen');
 
 // Game parameters
 let populationSize = 50;
@@ -829,6 +830,7 @@ nextGenBtn.addEventListener('click', () => {
 
 startStopBtn.addEventListener('click', async () => {
     if (!started) {
+        if (titleScreen) titleScreen.style.display = 'none';
         await start();
         startStopBtn.textContent = 'Stop';
         started = true;

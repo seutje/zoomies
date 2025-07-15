@@ -10,6 +10,7 @@ body {
 }
 
 #gameContainer {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -261,4 +262,41 @@ button:active {
 
 .generating {
     animation: pulse 1s ease-in-out infinite;
+}
+
+#titleScreen {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 21px;
+    width: 800px;
+    height: 800px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 100%);
+    pointer-events: none;
+    z-index: 10;
+    text-align: center;
+    border-radius: 15px;
+}
+
+#titleScreen h1 {
+    font-size: 48px;
+    color: #00ff88;
+    margin: 0;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.7);
+}
+
+#titleScreen h2 {
+    font-size: 24px;
+    color: #00ffff;
+    margin: 40px 0;
+}
+
+#titleScreen p {
+    font-size: 16px;
+    color: #00ff88;
+    margin-bottom: 0;
 }
