@@ -337,6 +337,10 @@ button:active {
     padding: 10px;
     font-family: monospace;
 }
+.attribute-container {
+    display: flex;
+    align-items: center;
+}
 
 .attribute-bar {
     flex: 1;
