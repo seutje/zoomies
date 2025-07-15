@@ -44,8 +44,9 @@ class Car {
     constructor(brain = null) {
         this.x = checkpoints.length ? checkpoints[0].x : 100;
         this.y = checkpoints.length ? checkpoints[0].y : 400;
-        this.width = 20;
-        this.height = 10;
+        // Slightly larger square to better fit the cat drawing
+        this.width = 16;
+        this.height = 16;
         if (checkpoints.length > 1) {
             const target = checkpoints[1];
             const start = checkpoints[0];
@@ -303,25 +304,40 @@ class Car {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
         
-        // Car body with gradient
-        const gradient = ctx.createLinearGradient(-this.width/2, 0, this.width/2, 0);
+        // Cat head with gradient
+        const r = Math.max(this.width, this.height) / 2;
+        const gradient = ctx.createLinearGradient(-r, -r, r, r);
         gradient.addColorStop(0, this.color);
         gradient.addColorStop(1, this.adjustBrightness(this.color, -30));
-        
+
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Car outline
+
+        // Outline
         ctx.strokeStyle = this.adjustBrightness(this.color, 50);
         ctx.lineWidth = 1;
         ctx.stroke();
-        
-        // Car direction indicator
+
+        // Ears
+        ctx.fillStyle = this.adjustBrightness(this.color, 20);
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.6, -r * 0.2);
+        ctx.lineTo(-r * 0.3, -r * 0.9);
+        ctx.lineTo(0, -r * 0.2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(r * 0.6, -r * 0.2);
+        ctx.lineTo(r * 0.3, -r * 0.9);
+        ctx.lineTo(0, -r * 0.2);
+        ctx.fill();
+
+        // Nose as direction indicator
         ctx.fillStyle = this.adjustBrightness(this.color, 50);
         ctx.beginPath();
-        ctx.rect(this.width/2 - 5, -this.height/4, 5, this.height/2);
+        ctx.arc(r * 0.6, 0, r * 0.2, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.restore();
