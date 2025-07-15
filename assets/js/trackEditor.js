@@ -14,6 +14,49 @@ if (editorCanvas) {
   const toggleBtn = document.getElementById('toggleShapeBtn');
   const addBtn = document.getElementById('addCheckpointBtn');
   const removeBtn = document.getElementById('removeCheckpointBtn');
+  const dataArea = document.getElementById('trackData');
+  const copyBtn = document.getElementById('copyTrackBtn');
+
+  const formatSeg = seg => ({
+    start: [seg.start.x, seg.start.y],
+    cp1: [seg.cp1.x, seg.cp1.y],
+    cp2: [seg.cp2.x, seg.cp2.y],
+    end: [seg.end.x, seg.end.y]
+  });
+
+  const rectFromSegs = segs => {
+    if (segs.length === 0) return { x: 0, y: 0, width: 0, height: 0, radius: 0 };
+    const xs = [];
+    const ys = [];
+    segs.forEach(s => {
+      xs.push(s.start.x, s.cp1.x, s.cp2.x, s.end.x);
+      ys.push(s.start.y, s.cp1.y, s.cp2.y, s.end.y);
+    });
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY, radius: 0 };
+  };
+
+  const updateData = () => {
+    const data = {
+      curves: {
+        outer: shapes.outer.map(formatSeg),
+        inner: shapes.inner.map(formatSeg)
+      },
+      checkpoints: checkpointsEditor.map(c => ({ x: c.x, y: c.y, radius: 60 })),
+      outerRect: rectFromSegs(shapes.outer),
+      innerRect: rectFromSegs(shapes.inner)
+    };
+    if (dataArea) dataArea.value = JSON.stringify(data, null, 2);
+  };
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      if (dataArea) navigator.clipboard.writeText(dataArea.value);
+    });
+  }
 
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
@@ -63,9 +106,10 @@ if (editorCanvas) {
       ctx.fillStyle = '#ff8800';
       ctx.fill();
     });
-
+    updateData();
     requestAnimationFrame(draw);
   }
+  updateData();
   draw();
 
   editorCanvas.addEventListener('mousedown', e => {

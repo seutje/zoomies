@@ -318,3 +318,13 @@ button:active {
     border-radius: 15px;
     background: #111;
 }
+#trackData {
+    width: 800px;
+    margin-top: 10px;
+    background: #222;
+    color: #fff;
+    border: 1px solid #ffaa00;
+    border-radius: 10px;
+    padding: 10px;
+    font-family: monospace;
+}
