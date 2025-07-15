@@ -170,9 +170,9 @@ if (editorCanvas) {
   });
 
   toggleBtn.addEventListener('click', () => {
-    drawing = false;
     currentPoint = null;
     mode = mode === 'outer' ? 'inner' : 'outer';
+    drawing = shapes[mode].length === 0;
     toggleBtn.textContent = `Editing ${mode}`;
   });
 
