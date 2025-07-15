@@ -61,6 +61,7 @@ label {
     color: #00ff88;
     text-transform: uppercase;
     letter-spacing: 1px;
+    width: 200px;
 }
 
 input[type="range"] {
