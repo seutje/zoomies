@@ -34,6 +34,8 @@ let cats = [];
 let bestCats = [];
 let bestOverallCats = [];
 let bestFitnessOverall = 0;
+let bestCatId = null;
+let nextCatId = 1;
 let track = [];
 let checkpoints = [];
 let outerPolygon = [];
@@ -72,6 +74,7 @@ class Cat {
         this.framesSinceFitness = 0;
         this.hue = Math.random() * 360;
         this.color = `hsl(${this.hue}, 70%, 50%)`;
+        this.id = nextCatId++;
         
         // Neural network
         if (brain) {
@@ -703,6 +706,7 @@ function nextGeneration() {
     if (currentBestFitness > bestFitnessOverall || bestOverallCats.length === 0) {
         // Current generation has a new best performer
         bestFitnessOverall = currentBestFitness;
+        bestCatId = cats[0].id;
         bestOverallCats = cats.slice(0, 5);
         bestCats = bestOverallCats;
     } else {
@@ -713,7 +717,7 @@ function nextGeneration() {
     // Update UI
     generation++;
     generationEl.textContent = generation;
-    bestFitnessEl.textContent = Math.round(bestFitnessOverall);
+    bestFitnessEl.textContent = `#${bestCatId} ${Math.round(bestFitnessOverall)}`;
     
     // Create new generation
     initCats();
@@ -775,7 +779,7 @@ function updateLeaderboard() {
         else if (cat.finished) status = 'finished';
         
         item.innerHTML = `
-            <span><span class="rank">#${index + 1}</span> Cat ${cat.color.match(/\d+/)[0]}</span>
+            <span><span class="rank">#${index + 1}</span> Cat ${cat.id}</span>
             <span class="fitness">${Math.round(cat.fitness)}</span>
             <span class="status ${status}">${status}</span>
         `;
@@ -788,7 +792,7 @@ async function start() {
     await loadTrack(trackSelect.value);
     initCats();
     isRunning = true;
-    bestFitnessEl.textContent = Math.round(bestFitnessOverall);
+    bestFitnessEl.textContent = `#${bestCatId} ${Math.round(bestFitnessOverall)}`;
     update();
 }
 
