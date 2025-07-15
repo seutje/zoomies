@@ -72,7 +72,7 @@ class Car {
             this.brain = brain.copy();
             this.brain.mutate(mutationRate);
         } else {
-            this.brain = new NeuralNetwork(5, 8, 4);
+            this.brain = new NeuralNetwork(6, 8, 4);
         }
         
         // Ray casting for vision
@@ -86,8 +86,8 @@ class Car {
             });
         }
         
-        // Sensor readings
-        this.readings = new Array(this.rays.length).fill(0);
+        // Sensor readings (5 distance sensors + 1 checkpoint direction)
+        this.readings = new Array(this.rays.length + 1).fill(0);
     }
     
     update() {
@@ -187,6 +187,19 @@ class Car {
             }
             
             this.readings[i] = 1 - (minDistance / this.rayLength);
+        }
+
+        // Direction to next checkpoint normalized between -1 and 1
+        if (checkpoints.length > 0) {
+            const idx = this.checkpointIndex < checkpoints.length ? this.checkpointIndex : 0;
+            const checkpoint = checkpoints[idx];
+            const angleToCheckpoint = Math.atan2(checkpoint.y - this.y, checkpoint.x - this.x);
+            let diff = angleToCheckpoint - this.angle;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            this.readings[this.rays.length] = diff / Math.PI;
+        } else {
+            this.readings[this.rays.length] = 0;
         }
     }
     
