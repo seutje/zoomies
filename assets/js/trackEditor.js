@@ -115,7 +115,6 @@ if (editorCanvas) {
       ctx.fillStyle = '#ff8800';
       ctx.fill();
     });
-    updateData();
     requestAnimationFrame(draw);
   }
   updateData();
@@ -174,6 +173,7 @@ if (editorCanvas) {
 
   window.addEventListener('mouseup', () => {
     dragging = null;
+    updateData();
   });
 
   editorCanvas.addEventListener('dblclick', () => {
@@ -210,6 +210,7 @@ if (editorCanvas) {
         currentPoint = null;
         mode = 'outer';
         toggleBtn.textContent = 'Editing outer';
+        updateData();
       } catch {
         alert('Invalid track data');
       }
