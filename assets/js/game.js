@@ -13,6 +13,8 @@ const speedSlider = document.getElementById('speedSlider');
 const speedValue = document.getElementById('speedValue');
 const lapSlider = document.getElementById('lapSlider');
 const lapValue = document.getElementById('lapValue');
+const hiddenSlider = document.getElementById('hiddenSlider');
+const hiddenValue = document.getElementById('hiddenValue');
 const mutationSlider = document.getElementById('mutationSlider');
 const mutationValue = document.getElementById('mutationValue');
 const nextGenBtn = document.getElementById('nextGenBtn');
@@ -28,6 +30,7 @@ const titleScreen = document.getElementById('titleScreen');
 let populationSize = 50;
 let simulationSpeed = 1;
 let lapCount = 5;
+let hiddenNodes = 8;
 let mutationRate = 0.1;
 let generation = 1;
 let cats = [];
@@ -81,7 +84,7 @@ class Cat {
             this.brain = brain.copy();
             this.brain.mutate(mutationRate);
         } else {
-            this.brain = new NeuralNetwork(7, 8, 4);
+            this.brain = new NeuralNetwork(7, hiddenNodes, 4);
         }
         
         // Ray casting for vision
@@ -829,6 +832,11 @@ speedSlider.addEventListener('input', () => {
 lapSlider.addEventListener('input', () => {
     lapCount = parseInt(lapSlider.value);
     lapValue.textContent = lapCount;
+});
+
+hiddenSlider.addEventListener('input', () => {
+    hiddenNodes = parseInt(hiddenSlider.value);
+    hiddenValue.textContent = hiddenNodes;
 });
 
 mutationSlider.addEventListener('input', () => {
