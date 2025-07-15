@@ -266,15 +266,15 @@ button:active {
 
 #titleScreen {
     position: absolute;
-    top: 0;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 21px;
     width: 800px;
     height: 800px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    padding: 60px 20px;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 100%);
     pointer-events: none;
     z-index: 10;
@@ -292,7 +292,7 @@ button:active {
 #titleScreen h2 {
     font-size: 24px;
     color: #00ffff;
-    margin: auto 0;
+    margin: 40px 0;
 }
 
 #titleScreen p {
