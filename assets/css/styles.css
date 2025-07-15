@@ -337,3 +337,23 @@ button:active {
     padding: 10px;
     font-family: monospace;
 }
+
+.attribute-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    margin: 0 10px;
+    overflow: hidden;
+}
+
+.attribute-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, #00ff88, #00ffff);
+    width: 40%;
+}
+
+.attr-btn {
+    padding: 5px 10px;
+    min-width: 30px;
+}

@@ -26,6 +26,18 @@ const catsRunningEl = document.getElementById('catsRunning');
 const leaderboardList = document.getElementById('leaderboardList');
 const trackSelect = document.getElementById('trackSelect');
 const titleScreen = document.getElementById('titleScreen');
+const accelMinus = document.getElementById('accelMinus');
+const accelPlus = document.getElementById('accelPlus');
+const accelBar = document.getElementById('accelBar');
+const accelValue = document.getElementById('accelValue');
+const steerMinus = document.getElementById('steerMinus');
+const steerPlus = document.getElementById('steerPlus');
+const steerBar = document.getElementById('steerBar');
+const steerValue = document.getElementById('steerValue');
+const speedMinus = document.getElementById('speedMinus');
+const speedPlus = document.getElementById('speedPlus');
+const speedBar = document.getElementById('speedBar');
+const speedAttribValue = document.getElementById('speedAttribValue');
 
 // Game parameters
 let populationSize = 50;
@@ -48,6 +60,39 @@ let outerBounds = { x: 50, y: 50, width: 700, height: 700, radius: 50 };
 let innerBounds = { x: 150, y: 150, width: 500, height: 500, radius: 50 };
 let isRunning = false;
 let started = false;
+const TOTAL_POINTS = 12;
+const MAX_ATTR_POINTS = 10;
+const attributePoints = {
+    acceleration: 4,
+    steering: 4,
+    speed: 4
+};
+
+function totalAttr() {
+    return attributePoints.acceleration + attributePoints.steering + attributePoints.speed;
+}
+
+function updateAttributeUI() {
+    if (accelBar) accelBar.style.width = `${attributePoints.acceleration * 10}%`;
+    if (accelValue) accelValue.textContent = attributePoints.acceleration;
+    if (steerBar) steerBar.style.width = `${attributePoints.steering * 10}%`;
+    if (steerValue) steerValue.textContent = attributePoints.steering;
+    if (speedBar) speedBar.style.width = `${attributePoints.speed * 10}%`;
+    if (speedAttribValue) speedAttribValue.textContent = attributePoints.speed;
+}
+
+updateAttributeUI();
+
+function changeAttribute(attr, delta) {
+    const newValue = attributePoints[attr] + delta;
+    if (newValue < 0 || newValue > MAX_ATTR_POINTS) return;
+    attributePoints[attr] = newValue;
+    if (totalAttr() > TOTAL_POINTS) {
+        attributePoints[attr] -= delta;
+        return;
+    }
+    updateAttributeUI();
+}
 
 // Cat class
 class Cat {
@@ -64,10 +109,10 @@ class Cat {
             this.angle = Math.PI / 2; // fallback
         }
         this.speed = 0;
-        this.maxSpeed = 5;
-        this.acceleration = 0.2;
+        this.maxSpeed = attributePoints.speed * 1.25;
+        this.acceleration = attributePoints.acceleration * 0.05;
         this.friction = 0.05;
-        this.turnSpeed = 0.03;
+        this.turnSpeed = attributePoints.steering * 0.0075;
         this.fitness = 0;
         this.dead = false;
         this.finished = false;
@@ -877,6 +922,13 @@ mutationSlider.addEventListener('input', () => {
     mutationRate = parseFloat(mutationSlider.value);
     mutationValue.textContent = mutationRate.toFixed(2);
 });
+
+if (accelPlus) accelPlus.addEventListener('click', () => changeAttribute('acceleration', 1));
+if (accelMinus) accelMinus.addEventListener('click', () => changeAttribute('acceleration', -1));
+if (steerPlus) steerPlus.addEventListener('click', () => changeAttribute('steering', 1));
+if (steerMinus) steerMinus.addEventListener('click', () => changeAttribute('steering', -1));
+if (speedPlus) speedPlus.addEventListener('click', () => changeAttribute('speed', 1));
+if (speedMinus) speedMinus.addEventListener('click', () => changeAttribute('speed', -1));
 
 nextGenBtn.addEventListener('click', () => {
     nextGeneration();
