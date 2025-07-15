@@ -199,7 +199,7 @@ if (editorCanvas) {
   });
 
   if (loadBtn) {
-    loadBtn.addEventListener('click', () => {
+    loadBtn.addEventListener('mousedown', () => {
       if (!dataArea) return;
       try {
         const data = JSON.parse(dataArea.value);
@@ -210,7 +210,7 @@ if (editorCanvas) {
         currentPoint = null;
         mode = 'outer';
         toggleBtn.textContent = 'Editing outer';
-        updateData();
+        draw();
       } catch {
         alert('Invalid track data');
       }
