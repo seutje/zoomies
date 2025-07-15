@@ -17,12 +17,14 @@ Zoomies is a simple AI racing simulator served by a small Node.js server.
 ## Development
 
 - Lint JavaScript with `npm run lint`.
-- Run tests with `npm test` (no tests are currently included).
+- Run tests with `npm test`.
 
 ## Project Structure
 
 - `server.js` – simple HTTP server.
 - `index.html` – main page for the simulator.
 - `assets/` – client-side JavaScript and CSS files.
+- `tracks/` – JSON files for the tracks.
+- `tests/` – Jest tests.
 
 Enjoy racing!
