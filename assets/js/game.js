@@ -2,6 +2,10 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
+// Cat sprite used for cars
+const catImg = new Image();
+catImg.src = 'assets/images/cat.png';
+
 // UI elements
 const populationSlider = document.getElementById('populationSlider');
 const populationValue = document.getElementById('populationValue');
@@ -44,8 +48,8 @@ class Car {
     constructor(brain = null) {
         this.x = checkpoints.length ? checkpoints[0].x : 100;
         this.y = checkpoints.length ? checkpoints[0].y : 400;
-        this.width = 20;
-        this.height = 10;
+        this.width = 21;
+        this.height = 25;
         if (checkpoints.length > 1) {
             const target = checkpoints[1];
             const start = checkpoints[0];
@@ -66,7 +70,8 @@ class Car {
         this.time = 0;
         this.lastFitness = 0;
         this.framesSinceFitness = 0;
-        this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+        this.hue = Math.random() * 360;
+        this.color = `hsl(${this.hue}, 70%, 50%)`;
         
         // Neural network
         if (brain) {
@@ -303,26 +308,10 @@ class Car {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
         
-        // Car body with gradient
-        const gradient = ctx.createLinearGradient(-this.width/2, 0, this.width/2, 0);
-        gradient.addColorStop(0, this.color);
-        gradient.addColorStop(1, this.adjustBrightness(this.color, -30));
-        
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.rect(-this.width/2, -this.height/2, this.width, this.height);
-        ctx.fill();
-        
-        // Car outline
-        ctx.strokeStyle = this.adjustBrightness(this.color, 50);
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
-        // Car direction indicator
-        ctx.fillStyle = this.adjustBrightness(this.color, 50);
-        ctx.beginPath();
-        ctx.rect(this.width/2 - 5, -this.height/4, 5, this.height/2);
-        ctx.fill();
+        // Draw the cat sprite
+        if (catImg.complete) {
+            ctx.drawImage(catImg, -this.width/2, -this.height/2, this.width, this.height);
+        }
         
         ctx.restore();
         
