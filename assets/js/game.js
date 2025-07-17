@@ -96,7 +96,7 @@ function changeAttribute(attr, delta) {
 
 // Cat class
 class Cat {
-    constructor(brain = null) {
+    constructor(brain = null, mutate = true) {
         this.x = checkpoints.length ? checkpoints[0].x : 100;
         this.y = checkpoints.length ? checkpoints[0].y : 400;
         this.width = 21;
@@ -128,7 +128,9 @@ class Cat {
         // Neural network
         if (brain) {
             this.brain = brain.copy();
-            this.brain.mutate(mutationRate);
+            if (mutate) {
+                this.brain.mutate(mutationRate);
+            }
         } else {
             this.brain = new NeuralNetwork(7, hiddenNodes, 4);
         }
@@ -422,7 +424,7 @@ class Cat {
     }
     
     copy() {
-        const copy = new Cat(this.brain);
+        const copy = new Cat(this.brain, false);
         copy.fitness = this.fitness;
         return copy;
     }
@@ -754,11 +756,17 @@ function drawTrack() {
 // Initialize cats
 function initCats() {
     cats = [];
-    
+
     if (bestCats.length > 0) {
-        // Create new generation from best cats
-        for (let i = 0; i < populationSize; i++) {
-            const parentIndex = i % bestCats.length;
+        // Include top performer unchanged
+        const elite = new Cat(bestCats[0].brain, false);
+        elite.hue = bestCats[0].hue;
+        elite.color = bestCats[0].color;
+        cats.push(elite);
+
+        // Create remaining cats from best performers
+        for (let i = 1; i < populationSize; i++) {
+            const parentIndex = (i - 1) % bestCats.length;
             const parent = bestCats[parentIndex];
             cats.push(new Cat(parent.brain));
         }
