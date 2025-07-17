@@ -234,6 +234,11 @@ button:active {
     border-bottom: none;
 }
 
+#topCat {
+    font-weight: 900;
+    background: rgba(0, 255, 136, 0.1);
+}
+
 .rank {
     font-weight: 900;
     color: #00ff88;

@@ -24,6 +24,7 @@ const generationEl = document.getElementById('generation');
 const bestFitnessEl = document.getElementById('bestFitness');
 const catsRunningEl = document.getElementById('catsRunning');
 const leaderboardList = document.getElementById('leaderboardList');
+const topCatEl = document.getElementById('topCat');
 const trackSelect = document.getElementById('trackSelect');
 const titleScreen = document.getElementById('titleScreen');
 const accelMinus = document.getElementById('accelMinus');
@@ -842,16 +843,27 @@ function update() {
 // Update leaderboard
 function updateLeaderboard() {
     const sortedCats = [...cats].sort((a, b) => b.fitness - a.fitness).slice(0, 10);
-    
+
+    if (topCatEl) {
+        if (bestCatId !== null) {
+            topCatEl.innerHTML = `
+                <span>Cat ${bestCatId}</span>
+                <span class="fitness">${Math.round(bestFitnessOverall)}</span>
+            `;
+        } else {
+            topCatEl.innerHTML = '';
+        }
+    }
+
     leaderboardList.innerHTML = '';
     sortedCats.forEach((cat, index) => {
         const item = document.createElement('div');
         item.className = 'leaderboard-item';
-        
+
         let status = 'active';
         if (cat.dead) status = 'crashed';
         else if (cat.finished) status = 'finished';
-        
+
         item.innerHTML = `
             <span><span class="rank">#${index + 1}</span> Cat ${cat.id}</span>
             <span class="fitness">${Math.round(cat.fitness)}</span>
@@ -871,8 +883,15 @@ async function start() {
     isRunning = true;
     if (bestCatId) {
         bestFitnessEl.textContent = `#${bestCatId} ${Math.round(bestFitnessOverall)}`;
+        if (topCatEl) {
+            topCatEl.innerHTML = `
+                <span>Cat ${bestCatId}</span>
+                <span class="fitness">${Math.round(bestFitnessOverall)}</span>
+            `;
+        }
     } else {
         bestFitnessEl.textContent = Math.round(bestFitnessOverall);
+        if (topCatEl) topCatEl.innerHTML = '';
     }
     update();
     return true;
@@ -888,6 +907,7 @@ async function resetSimulation() {
     nextCatId = 1;
     generationEl.textContent = generation;
     bestFitnessEl.textContent = 0;
+    if (topCatEl) topCatEl.innerHTML = '';
     if (titleScreen) titleScreen.style.display = 'none';
     const loaded = await start();
     if (loaded) {
