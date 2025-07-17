@@ -381,9 +381,9 @@ class Cat {
             ctx.save();
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.moveTo(this.x, this.y - this.height / 2 - 12);
-            ctx.lineTo(this.x - 6, this.y - this.height / 2 - 2);
-            ctx.lineTo(this.x + 6, this.y - this.height / 2 - 2);
+            ctx.moveTo(this.x - 6, this.y - this.height / 2 - 12);
+            ctx.lineTo(this.x + 6, this.y - this.height / 2 - 12);
+            ctx.lineTo(this.x, this.y - this.height / 2 - 2);
             ctx.closePath();
             ctx.fill();
             ctx.restore();
