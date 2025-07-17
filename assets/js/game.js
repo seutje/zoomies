@@ -426,6 +426,7 @@ class Cat {
     copy() {
         const copy = new Cat(this.brain, false);
         copy.fitness = this.fitness;
+        copy.id = this.id;
         return copy;
     }
 }
@@ -760,6 +761,7 @@ function initCats() {
     if (bestCats.length > 0) {
         // Include top performer unchanged
         const elite = new Cat(bestCats[0].brain, false);
+        elite.id = bestCats[0].id;
         elite.hue = bestCats[0].hue;
         elite.color = bestCats[0].color;
         cats.push(elite);
