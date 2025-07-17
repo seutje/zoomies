@@ -96,7 +96,7 @@ function changeAttribute(attr, delta) {
 
 // Cat class
 class Cat {
-    constructor(brain = null) {
+    constructor(brain = null, mutate = true) {
         this.x = checkpoints.length ? checkpoints[0].x : 100;
         this.y = checkpoints.length ? checkpoints[0].y : 400;
         this.width = 21;
@@ -128,7 +128,9 @@ class Cat {
         // Neural network
         if (brain) {
             this.brain = brain.copy();
-            this.brain.mutate(mutationRate);
+            if (mutate) {
+                this.brain.mutate(mutationRate);
+            }
         } else {
             this.brain = new NeuralNetwork(7, hiddenNodes, 4);
         }
@@ -374,6 +376,18 @@ class Cat {
         }
         
         ctx.restore();
+
+        if (this.id === bestCatId) {
+            ctx.save();
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.moveTo(this.x - 6, this.y - this.height / 2 - 12);
+            ctx.lineTo(this.x + 6, this.y - this.height / 2 - 12);
+            ctx.lineTo(this.x, this.y - this.height / 2 - 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
         
         // Draw sensor rays
         if (!this.dead && !this.finished) {
@@ -422,8 +436,9 @@ class Cat {
     }
     
     copy() {
-        const copy = new Cat(this.brain);
+        const copy = new Cat(this.brain, false);
         copy.fitness = this.fitness;
+        copy.id = this.id;
         return copy;
     }
 }
@@ -754,11 +769,18 @@ function drawTrack() {
 // Initialize cats
 function initCats() {
     cats = [];
-    
+
     if (bestCats.length > 0) {
-        // Create new generation from best cats
-        for (let i = 0; i < populationSize; i++) {
-            const parentIndex = i % bestCats.length;
+        // Include top performer unchanged
+        const elite = new Cat(bestCats[0].brain, false);
+        elite.id = bestCats[0].id;
+        elite.hue = bestCats[0].hue;
+        elite.color = bestCats[0].color;
+        cats.push(elite);
+
+        // Create remaining cats from best performers
+        for (let i = 1; i < populationSize; i++) {
+            const parentIndex = (i - 1) % bestCats.length;
             const parent = bestCats[parentIndex];
             cats.push(new Cat(parent.brain));
         }
@@ -842,6 +864,10 @@ function update() {
 // Update leaderboard
 function updateLeaderboard() {
     const sortedCats = [...cats].sort((a, b) => b.fitness - a.fitness).slice(0, 10);
+
+    if (sortedCats.length > 0) {
+        bestCatId = sortedCats[0].id;
+    }
     
     leaderboardList.innerHTML = '';
     sortedCats.forEach((cat, index) => {
