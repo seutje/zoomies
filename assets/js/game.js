@@ -864,6 +864,10 @@ function update() {
 // Update leaderboard
 function updateLeaderboard() {
     const sortedCats = [...cats].sort((a, b) => b.fitness - a.fitness).slice(0, 10);
+
+    if (sortedCats.length > 0) {
+        bestCatId = sortedCats[0].id;
+    }
     
     leaderboardList.innerHTML = '';
     sortedCats.forEach((cat, index) => {
