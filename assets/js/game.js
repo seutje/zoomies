@@ -71,6 +71,7 @@ const attributePoints = {
 // --------- Audio Setup ---------
 let audioContext;
 let masterGain;
+let compressor;
 let lapBuffer;
 
 function initAudio() {
@@ -79,7 +80,10 @@ function initAudio() {
     if (!AudioCtx) return;
     audioContext = new AudioCtx();
     masterGain = audioContext.createGain();
-    masterGain.connect(audioContext.destination);
+    masterGain.gain.value = 0.6;
+    compressor = audioContext.createDynamicsCompressor();
+    masterGain.connect(compressor);
+    compressor.connect(audioContext.destination);
     createLapBuffer();
 }
 
