@@ -6,6 +6,12 @@ const ctx = canvas.getContext('2d');
 const catImg = new Image();
 catImg.src = 'assets/images/cat.png';
 
+// Lap completion sound
+const lapAudio = typeof Audio !== 'undefined' ? new Audio('assets/audio/meow.mp3') : null;
+if (lapAudio) lapAudio.volume = 0.5;
+let lapSoundPending = false;
+const activeLapAudios = [];
+
 // UI elements
 const populationSlider = document.getElementById('populationSlider');
 const populationValue = document.getElementById('populationValue');
@@ -324,6 +330,7 @@ class Cat {
     checkCheckpoint() {
         if (this.checkpointIndex >= checkpoints.length) {
             this.lap++;
+            if (lapAudio) lapSoundPending = true;
             if (this.lap >= lapCount) {
                 this.finished = true;
                 return;
@@ -833,7 +840,21 @@ function update() {
                 activeCats++;
             }
         }
-        
+
+        if (lapSoundPending && lapAudio) {
+            lapSoundPending = false;
+            if (activeLapAudios.length < 5) {
+                const audio = lapAudio.cloneNode();
+                audio.volume = 0.5;
+                audio.play();
+                activeLapAudios.push(audio);
+                audio.addEventListener('ended', () => {
+                    const idx = activeLapAudios.indexOf(audio);
+                    if (idx !== -1) activeLapAudios.splice(idx, 1);
+                });
+            }
+        }
+
         catsRunningEl.textContent = activeCats;
         
         // Calculate track progress
