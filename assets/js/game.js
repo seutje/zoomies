@@ -68,6 +68,75 @@ const attributePoints = {
     speed: 4
 };
 
+// --------- Audio Setup ---------
+let audioContext;
+let masterGain;
+let compressor;
+let lapBuffer;
+
+function initAudio() {
+    if (typeof window === 'undefined') return;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    audioContext = new AudioCtx();
+    masterGain = audioContext.createGain();
+    masterGain.gain.value = 0.6;
+    compressor = audioContext.createDynamicsCompressor();
+    masterGain.connect(compressor);
+    compressor.connect(audioContext.destination);
+    createLapBuffer();
+}
+
+async function createLapBuffer() {
+    const duration = 0.8;
+    const sampleRate = audioContext.sampleRate;
+    const offline = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+
+    const osc1 = offline.createOscillator();
+    const osc2 = offline.createOscillator();
+    const gain = offline.createGain();
+    const filter = offline.createBiquadFilter();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'triangle';
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(600, 0);
+
+    osc1.frequency.setValueAtTime(500, 0);
+    osc1.frequency.linearRampToValueAtTime(300, duration);
+
+    osc2.frequency.setValueAtTime(250, 0);
+    osc2.frequency.linearRampToValueAtTime(150, duration);
+
+    gain.gain.setValueAtTime(0, 0);
+    gain.gain.linearRampToValueAtTime(0.3, 0.1);
+    gain.gain.linearRampToValueAtTime(0.1, 0.7);
+    gain.gain.exponentialRampToValueAtTime(0.01, duration);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(offline.destination);
+
+    osc1.start(0);
+    osc2.start(0);
+    osc1.stop(duration);
+    osc2.stop(duration);
+
+    lapBuffer = await offline.startRendering();
+}
+
+function playLapSound() {
+    if (!audioContext || !lapBuffer) return;
+    const src = audioContext.createBufferSource();
+    src.buffer = lapBuffer;
+    src.connect(masterGain);
+    src.start();
+}
+
+initAudio();
+
 function totalAttr() {
     return attributePoints.acceleration + attributePoints.steering + attributePoints.speed;
 }
@@ -324,6 +393,7 @@ class Cat {
     checkCheckpoint() {
         if (this.checkpointIndex >= checkpoints.length) {
             this.lap++;
+            playLapSound();
             if (this.lap >= lapCount) {
                 this.finished = true;
                 return;
@@ -968,6 +1038,9 @@ if (resetBtn) {
 }
 
 startStopBtn.addEventListener('click', async () => {
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
     if (!started) {
         if (titleScreen) titleScreen.style.display = 'none';
         const loaded = await start();
