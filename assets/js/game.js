@@ -10,6 +10,7 @@ catImg.src = 'assets/images/cat.png';
 const lapAudio = typeof Audio !== 'undefined' ? new Audio('assets/audio/meow.mp3') : null;
 if (lapAudio) lapAudio.volume = 0.5;
 let lapSoundPending = false;
+const activeLapAudios = [];
 
 // UI elements
 const populationSlider = document.getElementById('populationSlider');
@@ -841,9 +842,17 @@ function update() {
         }
 
         if (lapSoundPending && lapAudio) {
-            lapAudio.currentTime = 0;
-            lapAudio.play();
             lapSoundPending = false;
+            if (activeLapAudios.length < 5) {
+                const audio = lapAudio.cloneNode();
+                audio.volume = 0.5;
+                audio.play();
+                activeLapAudios.push(audio);
+                audio.addEventListener('ended', () => {
+                    const idx = activeLapAudios.indexOf(audio);
+                    if (idx !== -1) activeLapAudios.splice(idx, 1);
+                });
+            }
         }
 
         catsRunningEl.textContent = activeCats;
