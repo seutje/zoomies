@@ -60,6 +60,8 @@ let outerBounds = { x: 50, y: 50, width: 700, height: 700, radius: 50 };
 let innerBounds = { x: 150, y: 150, width: 500, height: 500, radius: 50 };
 let isRunning = false;
 let started = false;
+let audioCtx = null;
+let meowBuffer = null;
 const TOTAL_POINTS = 12;
 const MAX_ATTR_POINTS = 10;
 const attributePoints = {
@@ -82,6 +84,49 @@ function updateAttributeUI() {
 }
 
 updateAttributeUI();
+
+async function getMeowBuffer() {
+    if (meowBuffer) return meowBuffer;
+    if (typeof window === 'undefined') return null;
+    const OfflineCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OfflineCtor) return null;
+    const length = 0.5;
+    const sampleRate = 44100;
+    const ctx = new OfflineCtor(1, sampleRate * length, sampleRate);
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(550, 0);
+    osc.frequency.exponentialRampToValueAtTime(220, 0.3);
+    gain.gain.setValueAtTime(0, 0);
+    gain.gain.linearRampToValueAtTime(0.4, 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(length);
+    meowBuffer = await ctx.startRendering();
+    return meowBuffer;
+}
+
+function playMeow() {
+    if (typeof window === 'undefined') return;
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtor) return;
+
+    if (!audioCtx) {
+        audioCtx = new AudioCtor();
+    }
+
+    getMeowBuffer().then(buffer => {
+        if (!buffer) return;
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start();
+    });
+}
 
 function changeAttribute(attr, delta) {
     const newValue = attributePoints[attr] + delta;
@@ -324,6 +369,7 @@ class Cat {
     checkCheckpoint() {
         if (this.checkpointIndex >= checkpoints.length) {
             this.lap++;
+            playMeow();
             if (this.lap >= lapCount) {
                 this.finished = true;
                 return;
@@ -987,5 +1033,5 @@ startStopBtn.addEventListener('click', async () => {
 
 // Export classes for testing in Node environment
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Cat, NeuralNetwork, Matrix, sigmoid };
+    module.exports = { Cat, NeuralNetwork, Matrix, sigmoid, playMeow };
 }
