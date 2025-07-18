@@ -6,6 +6,11 @@ const ctx = canvas.getContext('2d');
 const catImg = new Image();
 catImg.src = 'assets/images/cat.png';
 
+// Lap completion sound
+const lapAudio = typeof Audio !== 'undefined' ? new Audio('assets/audio/meow.mp3') : null;
+if (lapAudio) lapAudio.volume = 0.5;
+let lapSoundPending = false;
+
 // UI elements
 const populationSlider = document.getElementById('populationSlider');
 const populationValue = document.getElementById('populationValue');
@@ -324,6 +329,7 @@ class Cat {
     checkCheckpoint() {
         if (this.checkpointIndex >= checkpoints.length) {
             this.lap++;
+            if (lapAudio) lapSoundPending = true;
             if (this.lap >= lapCount) {
                 this.finished = true;
                 return;
@@ -833,7 +839,13 @@ function update() {
                 activeCats++;
             }
         }
-        
+
+        if (lapSoundPending && lapAudio) {
+            lapAudio.currentTime = 0;
+            lapAudio.play();
+            lapSoundPending = false;
+        }
+
         catsRunningEl.textContent = activeCats;
         
         // Calculate track progress
