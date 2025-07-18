@@ -80,7 +80,7 @@ function initAudio() {
     if (!AudioCtx) return;
     audioContext = new AudioCtx();
     masterGain = audioContext.createGain();
-    masterGain.gain.value = 0.6;
+    masterGain.gain.value = 0.1;
     compressor = audioContext.createDynamicsCompressor();
     masterGain.connect(compressor);
     compressor.connect(audioContext.destination);
